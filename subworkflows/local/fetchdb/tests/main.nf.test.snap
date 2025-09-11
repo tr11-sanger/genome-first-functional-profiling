@@ -1,0 +1,346 @@
+{
+    "Fetch all mini databases without cache": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "host_genome_mini",
+                        "local_path": false,
+                        "remote_path": "host_genome_mini.tar.gz:md5,b9312f016027fe5c8a1efcde763474b5"
+                    },
+                    [
+                        [
+                            [
+                                "hg38_mini.fa:md5,c8332eed27ea21edb8adadbeab7276b8",
+                                "hg38_mini.fa.0123:md5,651db9a99e7ba77fae95eddc2fbd39c8",
+                                "hg38_mini.fa.amb:md5,355b5142f0c3239f684543b9bd0f6a40",
+                                "hg38_mini.fa.ann:md5,50498dbf515165c96dd34236a206146b",
+                                "hg38_mini.fa.bwt.2bit.64:md5,b3d3c0c452918d520d0a42cd61774f4d",
+                                "hg38_mini.fa.pac:md5,07cc23f8aae998222ebd5beec94f5d79"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "host_genome_minimap2_mini",
+                        "local_path": false,
+                        "remote_path": "hg38_mini_minimap2.tar.gz:md5,448ee03821fe71f57ecde9f2b16ce732"
+                    },
+                    [
+                        [
+                            "hg38_mini.mmi:md5,751d4cc1e5bf9169e7310ebff6e146c6"
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "motus_mini",
+                        "local_path": false,
+                        "remote_path": "motus_mini.tar.gz:md5,9afe02dbc20a65cbb10543e35325f362"
+                    },
+                    [
+                        [
+                            [
+                                "README:md5,4aef627366d259f3812735583ef14516",
+                                "db_mOTU_DB_CEN.fasta:md5,a11b65367739257d5c892cc6c64c7ead",
+                                "db_mOTU_DB_CEN.fasta.amb:md5,7b86619374663936efd3b507f9faa69b",
+                                "db_mOTU_DB_CEN.fasta.ann:md5,e84010466c10569558e5ab5823a19b77",
+                                "db_mOTU_DB_CEN.fasta.annotations:md5,144a93aeeae793e0348b0b837271151c",
+                                "db_mOTU_DB_CEN.fasta.bwt:md5,6d616d47b895589b43440979285a76c3",
+                                "db_mOTU_DB_CEN.fasta.pac:md5,029bfb8218ce557d5c87105fd3f4bb98",
+                                "db_mOTU_DB_CEN.fasta.sa:md5,b316658f3fd421f455df0ef0d1834199",
+                                "db_mOTU_DB_NR.fasta:md5,d2f6586546bdac6658ed58dc3584f2af",
+                                "db_mOTU_DB_NR.fasta.amb:md5,0ffe1d4953a09ed20381ac5899265325",
+                                "db_mOTU_DB_NR.fasta.ann:md5,cd09974fc0b5e2e8809bace46e7ebefd",
+                                "db_mOTU_DB_NR.fasta.bwt:md5,fe20c412ee9a5192963982aae4eb7182",
+                                "db_mOTU_DB_NR.fasta.pac:md5,1e1fcd14ea9fd2e117723f939b3acd9f",
+                                "db_mOTU_DB_NR.fasta.sa:md5,9bc21018398087567b562bd57d2ba41a",
+                                "db_mOTU_MAP_MGCs_to_mOTUs.tsv:md5,2316e0971a6c13454f4dd9c73da2d84d",
+                                "db_mOTU_MAP_MGCs_to_mOTUs_in-line.tsv:md5,da38170befa92de21cff7f9c7002efff",
+                                "db_mOTU_MAP_genes_to_MGCs.tsv:md5,b2bdc6e40b855d3f3010a3e3a0e10c00",
+                                "db_mOTU_bam_header_CEN:md5,3769c7179bf7d8ff1fca691676b48f52",
+                                "db_mOTU_bam_header_NR:md5,68433898b2a5902fab77aae6f3adf3af",
+                                "db_mOTU_genes_length_NR:md5,debedd69c056df08eab380e7365521c1",
+                                "db_mOTU_padding_coordinates_CEN.tsv:md5,7b5960a4a08f4a0942d0cba754a0ca67",
+                                "db_mOTU_padding_coordinates_NR.tsv:md5,098ef89f89d6562c564f939b2b0efe6d",
+                                "db_mOTU_taxonomy_CAMI.tsv:md5,d8e564cf2a6da63b48b9c105e8dae4fe",
+                                "db_mOTU_taxonomy_meta-mOTUs.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                                "db_mOTU_taxonomy_ref-mOTUs.tsv:md5,60c2b5e99e3593a33dcf57ae0360b480",
+                                "db_mOTU_taxonomy_ref-mOTUs_short_names.tsv:md5,63122fd3179752d7f0339534725a704c",
+                                [
+                                    "test1.motus:md5,cc20d6df440b669b06e444f9f1d8977b",
+                                    "test1_single.fastq:md5,c03f852de2bb09ea386bb1b82e17e21f"
+                                ],
+                                "db_mOTU_versions:md5,0ebf128d2ab5c0a8874c127725717775",
+                                [
+                                    "mOTUs.profiles.gz:md5,74d8b8ba896353c26b4849bc4ff6b31e",
+                                    "mOTUs.profiles_environments.gz:md5,f7f224f466ecc67ffa72f9192bef2e88"
+                                ],
+                                "target_cen_names.txt:md5,55e1b0db8d2645e28c91767ce06428ca",
+                                "target_maps.txt:md5,42b521821d0892fad0ebbf24d54728e7",
+                                "target_mgcs.txt:md5,92297169d50171f1c871965eb0c02aad",
+                                "target_motus.txt:md5,e27d4a505202c74701572b380d69fcab"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "pfam_mini",
+                        "local_path": false,
+                        "remote_path": "pfam_mini.tar.gz:md5,575ec05d2731c40ed57ff9d7e7bf72d0"
+                    },
+                    [
+                        [
+                            "Pfam-A.hmm:md5,d866e6ba053ff83ee429b428604faaff"
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "phix_mini",
+                        "local_path": false,
+                        "remote_path": "phix.tar.gz:md5,671e4ca9fc80f33a8ed65db6cf8f871c"
+                    },
+                    [
+                        [
+                            [
+                                "MN385565.fasta:md5,522596a763f4f0502701e4210ea81566",
+                                "MN385565.fasta.0123:md5,39a3c63ee6d0de507deaf983ebc14582",
+                                "MN385565.fasta.amb:md5,294f1e52f042e0015a31a0bf972e4703",
+                                "MN385565.fasta.ann:md5,b45e7919302529b159e715f44224be5f",
+                                "MN385565.fasta.bwt.2bit.64:md5,ad83deeaae0d258763702e7a54cf1936",
+                                "MN385565.fasta.pac:md5,8c851b6562a8f7bcd69b64133c26b6dc"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "rfam_mini",
+                        "local_path": false,
+                        "remote_path": "rfam_mini.tar.gz:md5,1e7d8d1813c4e3d4c46817359d0c2dfc"
+                    },
+                    [
+                        [
+                            [
+                                [
+                                    "ribo.claninfo:md5,ed55b0130da268e5deca604fa34da618",
+                                    "ribo.cm:md5,deaa5d3f619e105ea293152549f199c6",
+                                    "ribo.cm.i1f:md5,2b86bda6697a6bc4c5442a7902b3a934",
+                                    "ribo.cm.i1i:md5,90d12ec1bcb16d17725bcfb4a133b0de",
+                                    "ribo.cm.i1m:md5,12d184a9df4ac673bd84be9b9e0ba101",
+                                    "ribo.cm.i1p:md5,52d5b1c266247e686e7a7d4587da661e"
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "silva_lsu_mini",
+                        "local_path": false,
+                        "remote_path": "silva_lsu_mini.tar.gz:md5,a24b7c6ba7b440d77022c5ac221d8d91"
+                    },
+                    [
+                        [
+                            [
+                                "LSU.mini.fasta:md5,284084a46195d043678c2d076aaf563d",
+                                "lsu2.mini.otu:md5,97eb717f8c0789995edfd0965bd0f621",
+                                "slv_lsu_filtered2.mini.txt:md5,61027d80f567a5d6ae5789cf9c0e4180"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "silva_ssu_mini",
+                        "local_path": false,
+                        "remote_path": "silva_ssu_mini.tar.gz:md5,1276481102f218c981e0324180bafd9f"
+                    },
+                    [
+                        
+                    ]
+                ]
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.4"
+        },
+        "timestamp": "2025-05-30T12:40:38.250310753"
+    },
+    "Fetch all mini databases with cache": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "host_genome_mini",
+                        "local_path": false,
+                        "remote_path": "host_genome_mini.tar.gz:md5,b9312f016027fe5c8a1efcde763474b5"
+                    },
+                    [
+                        [
+                            [
+                                "hg38_mini.fa:md5,c8332eed27ea21edb8adadbeab7276b8",
+                                "hg38_mini.fa.0123:md5,651db9a99e7ba77fae95eddc2fbd39c8",
+                                "hg38_mini.fa.amb:md5,355b5142f0c3239f684543b9bd0f6a40",
+                                "hg38_mini.fa.ann:md5,50498dbf515165c96dd34236a206146b",
+                                "hg38_mini.fa.bwt.2bit.64:md5,b3d3c0c452918d520d0a42cd61774f4d",
+                                "hg38_mini.fa.pac:md5,07cc23f8aae998222ebd5beec94f5d79"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "host_genome_minimap2_mini",
+                        "local_path": false,
+                        "remote_path": "hg38_mini_minimap2.tar.gz:md5,448ee03821fe71f57ecde9f2b16ce732"
+                    },
+                    [
+                        [
+                            "hg38_mini.mmi:md5,751d4cc1e5bf9169e7310ebff6e146c6"
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "motus_mini",
+                        "local_path": false,
+                        "remote_path": "motus_mini.tar.gz:md5,9afe02dbc20a65cbb10543e35325f362"
+                    },
+                    [
+                        [
+                            [
+                                "README:md5,4aef627366d259f3812735583ef14516",
+                                "db_mOTU_DB_CEN.fasta:md5,a11b65367739257d5c892cc6c64c7ead",
+                                "db_mOTU_DB_CEN.fasta.amb:md5,7b86619374663936efd3b507f9faa69b",
+                                "db_mOTU_DB_CEN.fasta.ann:md5,e84010466c10569558e5ab5823a19b77",
+                                "db_mOTU_DB_CEN.fasta.annotations:md5,144a93aeeae793e0348b0b837271151c",
+                                "db_mOTU_DB_CEN.fasta.bwt:md5,6d616d47b895589b43440979285a76c3",
+                                "db_mOTU_DB_CEN.fasta.pac:md5,029bfb8218ce557d5c87105fd3f4bb98",
+                                "db_mOTU_DB_CEN.fasta.sa:md5,b316658f3fd421f455df0ef0d1834199",
+                                "db_mOTU_DB_NR.fasta:md5,d2f6586546bdac6658ed58dc3584f2af",
+                                "db_mOTU_DB_NR.fasta.amb:md5,0ffe1d4953a09ed20381ac5899265325",
+                                "db_mOTU_DB_NR.fasta.ann:md5,cd09974fc0b5e2e8809bace46e7ebefd",
+                                "db_mOTU_DB_NR.fasta.bwt:md5,fe20c412ee9a5192963982aae4eb7182",
+                                "db_mOTU_DB_NR.fasta.pac:md5,1e1fcd14ea9fd2e117723f939b3acd9f",
+                                "db_mOTU_DB_NR.fasta.sa:md5,9bc21018398087567b562bd57d2ba41a",
+                                "db_mOTU_MAP_MGCs_to_mOTUs.tsv:md5,2316e0971a6c13454f4dd9c73da2d84d",
+                                "db_mOTU_MAP_MGCs_to_mOTUs_in-line.tsv:md5,da38170befa92de21cff7f9c7002efff",
+                                "db_mOTU_MAP_genes_to_MGCs.tsv:md5,b2bdc6e40b855d3f3010a3e3a0e10c00",
+                                "db_mOTU_bam_header_CEN:md5,3769c7179bf7d8ff1fca691676b48f52",
+                                "db_mOTU_bam_header_NR:md5,68433898b2a5902fab77aae6f3adf3af",
+                                "db_mOTU_genes_length_NR:md5,debedd69c056df08eab380e7365521c1",
+                                "db_mOTU_padding_coordinates_CEN.tsv:md5,7b5960a4a08f4a0942d0cba754a0ca67",
+                                "db_mOTU_padding_coordinates_NR.tsv:md5,098ef89f89d6562c564f939b2b0efe6d",
+                                "db_mOTU_taxonomy_CAMI.tsv:md5,d8e564cf2a6da63b48b9c105e8dae4fe",
+                                "db_mOTU_taxonomy_meta-mOTUs.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                                "db_mOTU_taxonomy_ref-mOTUs.tsv:md5,60c2b5e99e3593a33dcf57ae0360b480",
+                                "db_mOTU_taxonomy_ref-mOTUs_short_names.tsv:md5,63122fd3179752d7f0339534725a704c",
+                                [
+                                    "test1.motus:md5,cc20d6df440b669b06e444f9f1d8977b",
+                                    "test1_single.fastq:md5,c03f852de2bb09ea386bb1b82e17e21f"
+                                ],
+                                "db_mOTU_versions:md5,0ebf128d2ab5c0a8874c127725717775",
+                                [
+                                    "mOTUs.profiles.gz:md5,74d8b8ba896353c26b4849bc4ff6b31e",
+                                    "mOTUs.profiles_environments.gz:md5,f7f224f466ecc67ffa72f9192bef2e88"
+                                ],
+                                "target_cen_names.txt:md5,55e1b0db8d2645e28c91767ce06428ca",
+                                "target_maps.txt:md5,42b521821d0892fad0ebbf24d54728e7",
+                                "target_mgcs.txt:md5,92297169d50171f1c871965eb0c02aad",
+                                "target_motus.txt:md5,e27d4a505202c74701572b380d69fcab"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "pfam_mini",
+                        "local_path": false,
+                        "remote_path": "pfam_mini.tar.gz:md5,575ec05d2731c40ed57ff9d7e7bf72d0"
+                    },
+                    [
+                        [
+                            "Pfam-A.hmm:md5,d866e6ba053ff83ee429b428604faaff"
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "phix_mini",
+                        "local_path": false,
+                        "remote_path": "phix.tar.gz:md5,671e4ca9fc80f33a8ed65db6cf8f871c"
+                    },
+                    [
+                        [
+                            [
+                                "MN385565.fasta:md5,522596a763f4f0502701e4210ea81566",
+                                "MN385565.fasta.0123:md5,39a3c63ee6d0de507deaf983ebc14582",
+                                "MN385565.fasta.amb:md5,294f1e52f042e0015a31a0bf972e4703",
+                                "MN385565.fasta.ann:md5,b45e7919302529b159e715f44224be5f",
+                                "MN385565.fasta.bwt.2bit.64:md5,ad83deeaae0d258763702e7a54cf1936",
+                                "MN385565.fasta.pac:md5,8c851b6562a8f7bcd69b64133c26b6dc"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "rfam_mini",
+                        "local_path": false,
+                        "remote_path": "rfam_mini.tar.gz:md5,1e7d8d1813c4e3d4c46817359d0c2dfc"
+                    },
+                    [
+                        [
+                            [
+                                [
+                                    "ribo.claninfo:md5,ed55b0130da268e5deca604fa34da618",
+                                    "ribo.cm:md5,deaa5d3f619e105ea293152549f199c6",
+                                    "ribo.cm.i1f:md5,2b86bda6697a6bc4c5442a7902b3a934",
+                                    "ribo.cm.i1i:md5,90d12ec1bcb16d17725bcfb4a133b0de",
+                                    "ribo.cm.i1m:md5,12d184a9df4ac673bd84be9b9e0ba101",
+                                    "ribo.cm.i1p:md5,52d5b1c266247e686e7a7d4587da661e"
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "silva_lsu_mini",
+                        "local_path": false,
+                        "remote_path": "silva_lsu_mini.tar.gz:md5,a24b7c6ba7b440d77022c5ac221d8d91"
+                    },
+                    [
+                        [
+                            [
+                                "LSU.mini.fasta:md5,284084a46195d043678c2d076aaf563d",
+                                "lsu2.mini.otu:md5,97eb717f8c0789995edfd0965bd0f621",
+                                "slv_lsu_filtered2.mini.txt:md5,61027d80f567a5d6ae5789cf9c0e4180"
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    {
+                        "id": "silva_ssu_mini",
+                        "local_path": false,
+                        "remote_path": "silva_ssu_mini.tar.gz:md5,1276481102f218c981e0324180bafd9f"
+                    },
+                    [
+                        
+                    ]
+                ]
+            ]
+        ],
+        "meta": {
+            "nf-test": "0.9.2",
+            "nextflow": "24.10.4"
+        },
+        "timestamp": "2025-05-30T12:39:53.046038979"
+    }
+}

@@ -1,0 +1,111 @@
+nextflow_process {
+
+    name "Test Process CHUNKFASTX"
+    script "../main.nf"
+    process "CHUNKFASTX"
+
+    tag "modules"
+    tag "modules_"
+    tag "chunkfastx"
+
+    test("sample-size > chunk-size should match snapshot") {
+
+        when {
+	    params {
+	    	test_chunksize = '1K'
+	    }
+            process {
+                """
+                input[0] = [
+		    ['id': 'test', 'single_end': false],
+		    [
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_1.fq.gz", checkIfExists: true),
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_2.fq.gz", checkIfExists: true)
+		    ]
+		]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+
+    }
+
+    test("single-end mini sample should match snapshot") {
+
+        when {
+	    params {
+	    	test_chunksize = '1K'
+	    }
+            process {
+                """
+                input[0] = [
+		    ['id': 'test', 'single_end': true],
+		    file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_1.fq.gz", checkIfExists: true),
+		]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+
+    }
+
+    test("sample-size < chunk-size should match snapshot") {
+
+        when {
+	    params {
+	    	test_chunksize = '200K'
+	    }
+            process {
+                """
+                input[0] = [
+		    ['id': 'test', 'single_end': false],
+		    [
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_1.fq.gz", checkIfExists: true),
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_2.fq.gz", checkIfExists: true)
+		    ]
+		]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+
+    }
+
+    test("read-length > chunk-size should match snapshot") {
+
+        when {
+	    params {
+	    	test_chunksize = '10'
+	    }
+            process {
+                """
+                input[0] = [
+		    ['id': 'test', 'single_end': false],
+		    [
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_1.fq.gz", checkIfExists: true),
+		        file("${projectDir}/tests/fixtures/chunkfastx/ERR10889147_mini_2.fq.gz", checkIfExists: true)
+		    ]
+		]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert snapshot(process.out).match()
+        }
+
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/ebi-metagenomics/genome-annotation/master/assets/schema_input.json",
+    "title": "ebi-metagenomics/rrap pipeline - params.input schema",
+    "description": "Schema for the file provided with params.input",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "minLength": 3
+            },
+            "fastx": {
+                "type": "string",
+                "pattern": "^\\S+\\.f.+[aq](\\.gz)?$",
+                "errorMessage": "FASTA/FASTQ file for reads must be provided, cannot contain spaces and must have extension '.fq', '.fastq', '.fa' or '.fasta' with optional '.gz' afterwards."
+            }
+        },
+        "required": ["sample", "fastx"]
+    }
+}

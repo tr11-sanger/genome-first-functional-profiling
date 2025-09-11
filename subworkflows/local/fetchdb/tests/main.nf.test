@@ -1,0 +1,75 @@
+nextflow_workflow {
+
+    name "Test Subworkflow FETCHDB"
+    script "../main.nf"
+    workflow "FETCHDB"
+
+    tag "subworkflows"
+    tag "subworkflows_"
+    tag "subworkflows/fetchdb"
+
+
+    test("Fetch all mini databases with cache") {
+
+        when {
+	    params {
+	        force_download_dbs = false
+	    }
+            workflow {
+                """
+                input[0] = Channel.of(
+		    ['id': 'motus_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/motus_mini.tar.gz"],
+		    ['id': 'host_genome_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/host_genome_mini.tar.gz"],
+		    ['id': 'host_genome_minimap2_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/hg38_mini_minimap2.tar.gz"],
+		    ['id': 'phix_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/phix.tar.gz"],
+		    ['id': 'rfam_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/rfam_mini.tar.gz"],
+		    ['id': 'silva_ssu_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/silva_ssu_mini.tar.gz"],
+		    ['id': 'silva_lsu_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/silva_lsu_mini.tar.gz"],
+		    ['id': 'pfam_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/pfam_mini.tar.gz"],
+		)
+		input[1] = "download_cache/databases"
+                """
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert snapshot(
+                workflow.out.dbs, 
+	    ).match()
+        }
+
+    }
+
+    test("Fetch all mini databases without cache") {
+
+        when {
+	    params {
+	        force_download_dbs = true
+	    }
+            workflow {
+                """
+                input[0] = Channel.of(
+		    ['id': 'motus_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/motus_mini.tar.gz"],
+		    ['id': 'host_genome_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/host_genome_mini.tar.gz"],
+		    ['id': 'host_genome_minimap2_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/hg38_mini_minimap2.tar.gz"],
+		    ['id': 'phix_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/phix.tar.gz"],
+		    ['id': 'rfam_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/rfam_mini.tar.gz"],
+		    ['id': 'silva_ssu_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/silva_ssu_mini.tar.gz"],
+		    ['id': 'silva_lsu_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/silva_lsu_mini.tar.gz"],
+		    ['id': 'pfam_mini', 'local_path': false, 'remote_path': "${projectDir}/tests/fixtures/dbs/pfam_mini.tar.gz"],
+		)
+		input[1] = "download_cache/databases"
+                """
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert snapshot(
+                workflow.out.dbs, 
+	    ).match()
+        }
+
+    }
+}

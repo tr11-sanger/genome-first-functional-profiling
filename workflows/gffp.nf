@@ -36,7 +36,7 @@ workflow GFFP {
             idx, sample, reads1, reads2, single_end ->
             return [
                 ['id': sample, 'idx': idx, 'single_end': single_end],
-                reads2 ? [reads1] : [reads1, reads2],
+                reads2 ? [file(reads1)] : [file(reads1), file(reads2)],
             ]
         }
 

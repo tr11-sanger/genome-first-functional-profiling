@@ -7,10 +7,10 @@ process SOURMASH2FASTA {
     path(lookup)
 
     output:
-    path "genomes_table.csv" , emit: genomes
-    path "contig_mapping.csv", emit: contigs
-    path "genomes.fna"       , emit: fasta
-    path "versions.yml"      , emit: versions
+    tuple val(meta), path("genomes_table.csv") , emit: genomes
+    tuple val(meta), path("contig_mapping.csv"), emit: contigs
+    tuple val(meta), path("genomes.fna")       , emit: fasta
+    path "versions.yml"                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

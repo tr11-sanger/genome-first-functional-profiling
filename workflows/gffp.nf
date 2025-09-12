@@ -13,6 +13,7 @@ include { SOURMASH_SKETCH } from '../modules/nf-core/sourmash/sketch/main'
 include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
+include { BAM2CSV } from '../modules/local/bam2csv/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,7 +110,7 @@ workflow GFFP {
             fasta: [meta, fasta]
         }
     BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
-
+    BAM2CSV(BOWTIE2_ALIGN.out.bam, false)
 
     emit:
     sylph_profile = SYLPH_PROFILE.out.profile_out

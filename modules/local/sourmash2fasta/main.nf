@@ -32,7 +32,7 @@ process SOURMASH2FASTA {
     : > contig_mapping.csv
     while read line; do
       IFS=, read g fp <<< "\$line"
-      if [[ \$fp =~ \.gz$ ]]; then
+      if [[ \$fp =~ \.gz\$ ]]; then
         gunzip -c \$fp | grep '>' | {
         while read c; do
           c_=(\$c)

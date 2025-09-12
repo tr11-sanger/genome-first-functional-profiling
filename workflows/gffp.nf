@@ -116,7 +116,7 @@ workflow GFFP {
     sylph_profile = SYLPH_PROFILE.out.profile_out
     sylph_query = SYLPH_QUERY.out.profile_out
     sourmash_profile = SOURMASH_GATHER.out.result
-    bam = BOWTIE2_ALIGN.out.bam
+    mapping_csv = BAM2CSV.out.csv
     versions = ch_versions                         // channel: [ path(versions.yml) ]
 }
 

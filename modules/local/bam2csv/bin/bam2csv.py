@@ -22,6 +22,7 @@ def extract_from_bam(bam):
         qend, rend = read.aligned_pairs[-1]
         ani = 1-(read.get_tag("NM")/read.query_alignment_length)
         alength = qend-qstart
+        rlength = read.reference_length
         mapq = read.mapping_quality
         align_score = read.get_tag("AS")
         yield query, reference, rstart, rend, alength, mapq, align_score, ani

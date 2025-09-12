@@ -2,11 +2,6 @@ process SOURMASH2FASTA {
     tag "${meta.id}"
     label 'process_single'
 
-    conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/sylph:0.7.0--h919a2d8_0' :
-        'biocontainers/sylph:0.7.0--h919a2d8_0' }"
-
     input:
     tuple val(meta), path(sourmash_results)
     path(lookup)

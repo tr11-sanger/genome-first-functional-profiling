@@ -40,6 +40,7 @@ workflow GFFP {
                 reads2 ? [file(reads1)] : [file(reads1), file(reads2)],
             ]
         }
+    reads_ch.view{ "reads_ch - ${it}" }
 
 
     // Fetch databases

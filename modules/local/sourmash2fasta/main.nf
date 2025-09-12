@@ -23,13 +23,12 @@ process SOURMASH2FASTA {
     script:
     def args = task.ext.args ?: ''
     """
-    lookup="/data/pam/team162/tr11/scratch/sourmash/genome_fp_lookup_sorted.txt"
     gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
     join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp $lookup > genomes_table.csv
     rm data.tmp
     cut -d',' -f2 genomes_table.csv | xargs cat > genomes.fna
     
-    : > contig_mapping.csv
+    echo -n '' > contig_mapping.csv
     while read line; do
       IFS=, read g fp <<< "\$line"
       if [[ \$fp =~ \.gz\$ ]]; then
@@ -48,6 +47,7 @@ process SOURMASH2FASTA {
         }
       fi
     done < genomes_table.csv
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
     END_VERSIONS

@@ -10,9 +10,9 @@ include { SYLPH_PROFILE } from '../modules/nf-core/sylph/profile/main'
 include { SYLPH_QUERY } from '../modules/local/sylph/query/main'
 include { SOURMASH_GATHER } from '../modules/nf-core/sourmash/gather/main'
 include { SOURMASH_SKETCH } from '../modules/nf-core/sourmash/sketch/main'
+include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
-include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,7 +25,7 @@ workflow GFFP {
     ch_versions = Channel.empty()
 
     // Parse samplesheet and fetch reads
-    reads = Channel.fromList(
+    reads_ch = Channel.fromList(
             samplesheetToList(
                 params.samplesheet, 
                 "${workflow.projectDir}/assets/schema_input.json"
@@ -78,15 +78,15 @@ workflow GFFP {
             file("${fp}/${meta.files.sylph}")
         }
         .first()
-    SYLPH_PROFILE(reads, sylph_db)
-    SYLPH_QUERY(reads, sylph_db)
+    SYLPH_PROFILE(reads_ch, sylph_db)
+    SYLPH_QUERY(reads_ch, sylph_db)
 
     sourmash_db = dbs.genome_catalogue
         .map { meta, fp ->
             file("${fp}/${meta.files.sourmash}")
         }
         .first()
-    SOURMASH_SKETCH(reads)
+    SOURMASH_SKETCH(reads_ch)
     SOURMASH_GATHER(SOURMASH_SKETCH.out.signatures, sourmash_db, false, false, false, false)
 
 
@@ -99,7 +99,16 @@ workflow GFFP {
     SOURMASH2FASTA(SOURMASH_GATHER.out.result, genome_fp_lookup_table)
 
     BOWTIE2_BUILD(SOURMASH2FASTA.out.fasta)
-    BOWTIE2_ALIGN(reads, BOWTIE2_BUILD.out.index, SOURMASH2FASTA.out.fasta, false, false)
+
+    align_in_ch = reads_ch
+        .join(BOWTIE2_BUILD.out.index)
+        .join(SOURMASH2FASTA.out.fasta)
+        .multiMap{ meta, reads, index, fasta -> 
+            reads: [meta, reads]
+            index: [meta, index]
+            fasta: [meta, fasta]
+        }
+    BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
 
 
     emit:

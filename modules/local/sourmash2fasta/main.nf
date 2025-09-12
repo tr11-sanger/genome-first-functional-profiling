@@ -21,12 +21,13 @@ process SOURMASH2FASTA {
     gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
     join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp $lookup > genomes_table.csv
     rm data.tmp
-    cut -d',' -f2 genomes_table.csv | xargs cat > genomes.fna
     
     echo -n '' > contig_mapping.csv
+    echo -n '' > genomes.fna
     while read line; do
       IFS=, read g fp <<< "\$line"
       if [[ \$fp =~ \\.gz\$ ]]; then
+        gunzip -c \$fp >> genomes.fna
         gunzip -c \$fp | grep '>' | {
         while read c; do
           c_=(\$c)
@@ -34,6 +35,7 @@ process SOURMASH2FASTA {
         done
         }
       else
+        cat \$fp >> genomes.fna
         cat \$fp | grep '>' | {
         while read c; do
           c_=(\$c)

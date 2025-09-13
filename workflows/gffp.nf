@@ -109,7 +109,7 @@ workflow GFFP {
             fasta: [meta, fasta]
         }
     BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
-    BAM2CSV(BOWTIE2_ALIGN.out.bam, file("${moduleDir}/bin/bam2csv.py"), false)
+    BAM2CSV(BOWTIE2_ALIGN.out.bam, false)
 
     emit:
     sylph_profile = SYLPH_PROFILE.out.profile_out

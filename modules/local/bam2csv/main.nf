@@ -2,16 +2,13 @@ process BAM2CSV {
     tag "${meta.id}"
     label 'process_single'
 
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/pysam:0.22.1--py39hdd5828d_3'
-        : 'biocontainers/pysam:0.22.1--py39hdd5828d_3'}"
+    conda "environment.yml"
 
     publishDir "${params.databases.cache_path}", mode: 'copy'
     errorStrategy 'retry'
 
     input:
     tuple val(meta), path(bam)
-    path(script)
     val delete_bam
 
     output:
@@ -19,10 +16,9 @@ process BAM2CSV {
 
     script:
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
-    def string_txt = new File(script).text
+    def script = "${moduleDir}/bin/bam2csv.py"
     """
-    echo "${string_txt}" > script.py
-    python script.py -i ${bam} -o "${meta.id}.csv" 
+    python ${script} -i ${bam} -o "${meta.id}.csv" 
     gzip "${meta.id}.csv"
     ${rm_cmd}
     """

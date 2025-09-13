@@ -2,7 +2,7 @@ process BAM2CSV {
     tag "${meta.id}"
     label 'process_single'
 
-    conda "environment.yml"
+    conda "${moduleDir}/environment.yml"
 
     publishDir "${params.databases.cache_path}", mode: 'copy'
     errorStrategy 'retry'

@@ -19,8 +19,9 @@ process BAM2CSV {
 
     script:
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
+    def string_txt = new File(script).text
     """
-    echo "${script.text}" > script.py
+    echo "${string_txt}" > script.py
     python script.py -i ${bam} -o "${meta.id}.csv" 
     gzip "${meta.id}.csv"
     ${rm_cmd}

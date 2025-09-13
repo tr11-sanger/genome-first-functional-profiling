@@ -20,7 +20,8 @@ process BAM2CSV {
     script:
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
     """
-    python ${script} -i ${bam} -o "${meta.id}.csv" 
+    echo "${script.text}" > script.py
+    python script.py -i ${bam} -o "${meta.id}.csv" 
     gzip "${meta.id}.csv"
     ${rm_cmd}
     """

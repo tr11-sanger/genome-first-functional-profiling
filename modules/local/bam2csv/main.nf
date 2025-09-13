@@ -11,13 +11,13 @@ process BAM2CSV {
 
     input:
     tuple val(meta), path(bam)
+    path(script)
     val delete_bam
 
     output:
     tuple val(meta), path("*.csv.gz"), emit: csv
 
     script:
-    def script = file("${moduleDir}/bin/bam2csv.py")
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
     """
     python ${script} -i ${bam} -o "${meta.id}.csv" 

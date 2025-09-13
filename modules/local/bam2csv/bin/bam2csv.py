@@ -30,7 +30,7 @@ def extract_from_bam(bam):
 if __name__ == '__main__':
     with open(args.output_fp, 'wt') as f:
         f.write("query,reference,rstart,rend,alength,mapq,as\n")
-        for i,(q,r,s,e,l,m,s,a) in enumerate(extract_from_bam(args.input_fp)):
+        for i,(q,r,start,end,l,m,s,a) in enumerate(extract_from_bam(args.input_fp)):
             if i%1_000_000==0:
                 print(datetime.datetime.now(), i)
-            f.write(f"{q},{r},{s},{e},{l},{m},{s},{a}\n")
+            f.write(f"{q},{r},{start},{end},{l},{m},{s},{a}\n")

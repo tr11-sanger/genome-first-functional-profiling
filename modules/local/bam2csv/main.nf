@@ -18,7 +18,7 @@ process BAM2CSV {
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
     def script = "${moduleDir}/bin/bam2csv.py"
     """
-    python ${script} -i ${bam} -o "${meta.id}.csv" 
+    bin/python ${script} -i ${bam} -o "${meta.id}.csv" 
     gzip "${meta.id}.csv"
     ${rm_cmd}
     """

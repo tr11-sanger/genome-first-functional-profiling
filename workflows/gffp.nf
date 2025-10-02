@@ -109,13 +109,25 @@ workflow GFFP {
             fasta: [meta, fasta]
         }
     BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
-    BAM2CSV(BOWTIE2_ALIGN.out.bam, false)
+
+    genome2cds = dbs.genome_catalogue
+        .map { meta, fp ->
+            file("${fp}/${meta.files.genome2cds}")
+        }
+        .first()
+    profile_ch = BOWTIE2_ALIGN.out.bam
+        .combine(genome2cds)
+        .join(SOURMASH2FASTA.out.contigs)
+        .combine(genome_fp_lookup_table)
+        .join(SOURMASH2FASTA.out.fasta)    
+    BAM2CSV(profile_ch, false)
 
     emit:
     sylph_profile = SYLPH_PROFILE.out.profile_out
     sylph_query = SYLPH_QUERY.out.profile_out
     sourmash_profile = SOURMASH_GATHER.out.result
-    mapping_csv = BAM2CSV.out.csv
+    taxonomic_profile = BAM2CSV.out.species_profile
+    functional_profile = BAM2CSV.out.species_cds_profile
     versions = ch_versions                         // channel: [ path(versions.yml) ]
 }
 

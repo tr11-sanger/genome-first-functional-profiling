@@ -404,7 +404,7 @@ if __name__ == '__main__':
     os.makedirs(out_dir, exist_ok=True)
 
     with gzip.open(out_dir / f"{prefix}species_coverage.tsv", 'wt') as f:
-        for species,(d,b,e,r,n1,n2) in species_top_genome_coverage.items():
+        for species,(genome,(d,b,e,r,n1,n2)) in species_top_genome_coverage.items():
             f.write(f'{species_list[species]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
     with gzip.open(out_dir / f"{prefix}genome_coverage.tsv", 'wt') as f:
         for genome,(d,b,e,r,n1,n2) in genomes_coverage.items():

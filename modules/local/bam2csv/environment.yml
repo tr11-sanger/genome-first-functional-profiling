@@ -4,4 +4,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - "pysam"
+  - python
+  - pysam
+  - pandas
+  - numpy

@@ -403,17 +403,17 @@ if __name__ == '__main__':
     out_dir = Path(args.output_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    with gzip.open(out_dir / f"{prefix}species_coverage.tsv", 'wt') as f:
+    with gzip.open(out_dir / f"{prefix}species_coverage.tsv.gz", 'wt') as f:
         for species,(genome,(d,b,e,r,n1,n2)) in species_top_genome_coverage.items():
             f.write(f'{species_list[species]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
-    with gzip.open(out_dir / f"{prefix}genome_coverage.tsv", 'wt') as f:
+    with gzip.open(out_dir / f"{prefix}genome_coverage.tsv.gz", 'wt') as f:
         for genome,(d,b,e,r,n1,n2) in genomes_coverage.items():
             f.write(f'{genome_list[genome]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
-    with gzip.open(out_dir / f"{prefix}species_cds_coverage.tsv", 'wt') as f:
+    with gzip.open(out_dir / f"{prefix}species_cds_coverage.tsv.gz", 'wt') as f:
         for species,d in species_cds_cluster_coverage.items():
-            for cds,(depth,b,e,r,l) in d.items():
-                f.write(f'{species}\t{cluster_list[cds]}\t{depth}\t{b}\t{e}\t{r}\t{l}\n')
-    with gzip.open(out_dir / f"{prefix}species_index.txt", 'wt') as f:
+            for (cds,partial),(depth,b,e,r,l) in d.items():
+                f.write(f'{species}\t{cluster_list[cds]}\t{1 if partial else 0}\t{depth}\t{b}\t{e}\t{r}\t{l}\n')
+    with gzip.open(out_dir / f"{prefix}species_index.txt.gz", 'wt') as f:
         for s in species_list:
             f.write(f'{s}\n')
 

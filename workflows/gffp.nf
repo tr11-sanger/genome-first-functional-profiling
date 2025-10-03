@@ -118,8 +118,10 @@ workflow GFFP {
     profile_ch = BOWTIE2_ALIGN.out.bam
         .combine(genome2cds)
         .join(SOURMASH2FASTA.out.contigs)
-        .combine(genome_fp_lookup_table)
         .join(SOURMASH2FASTA.out.fasta)    
+        .map { meta, bam, genome_cds, genome_contigs, refs -> 
+            [meta, bam, genome_cds, genome_contigs, file(params.genome_species), refs] 
+        }
     BAM2CSV(profile_ch, false)
 
     emit:

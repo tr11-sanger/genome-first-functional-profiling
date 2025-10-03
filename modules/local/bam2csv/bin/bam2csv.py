@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import re
 import json
@@ -18,9 +17,9 @@ parser.add_argument('-b', "--bam", type=str,
 parser.add_argument('-r', "--refs", type=str,
                     required=True,
                     help="Reference genomes FASTA filepath.")
-parser.add_argument('-g', "--genome_metadata", type=str,
+parser.add_argument('-g', "--genome_species", type=str,
                     required=True,
-                    help="Genome metadata filepath containing taxonomy.")
+                    help="Genome to species mapping TSV filepath.")
 parser.add_argument('-m', "--genome_contig_mapping", type=str,
                     required=True,
                     help="Genome to contig mapping TSV filepath.")
@@ -97,11 +96,15 @@ if __name__ == '__main__':
     contig2genome = {v:k for k,vs in genome2contigs.items() for v in vs}
     genome2contigs = dict(genome2contigs)
 
-    genome_metadata = pd.read_csv(args.genome_metadata, index_col=0)
-    genome2species = {clean_name(k):v.split(';')[-1] for k,v in genome_metadata.taxonomy.to_dict().items() if isinstance(v, str)}
+    genome2species = {}
+    with open(args.genome_species, 'rt') as f:
+        for l in f:
+            k,v = [v.strip() for v in l.split('\t')]
+            genome2species[k] = v
     species2genome = defaultdict(set)
     for k,v in genome2species.items():
         species2genome[v].add(k)
+    species2genome = dict(species2genome)
 
     contig2species = {k:genome2species[clean_name(v)] for k,v in contig2genome.items()}
 
@@ -393,7 +396,8 @@ if __name__ == '__main__':
     
     mapping_statistics = {
         'n_mapped_reads': len(read_species_mappings),
-        'n_mapped_reads_after_reassign': len({r for _,g in species_genome_read_mappings.items() for r,_ in g.items()}),
+        'n_mapped_reads_after_reassign': len({r for _,gs in species_genome_read_mappings.items() for _,rs in gs.items() for r in rs}),
+        'n_mapped_read_pairs_after_reassign': len({r for _,gs in species_genome_read_mappings.items() for _,rs in gs.items() for r,_ in rs}),
         'n_mapped_read_pairs': len({k for k,_ in read_species_mappings}),
     }
 

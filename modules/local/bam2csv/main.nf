@@ -8,7 +8,7 @@ process BAM2CSV {
     errorStrategy 'retry'
 
     input:
-    tuple val(meta), path(bam), path(genome2cds), path(genome_contig_mapping), path(genome_metadata), path(refs)
+    tuple val(meta), path(bam), path(genome2cds), path(genome_contig_mapping), path(genome_species), path(refs)
     val delete_bam
 
     output:
@@ -25,7 +25,7 @@ process BAM2CSV {
     python ${script} \
         --genome_cds_filepaths "${genome2cds}" \\
         --genome_contig_mapping "${genome_contig_mapping}" \\
-        --genome_metadata "${genome_metadata}"" \\
+        --genome_species "${genome_species}"" \\
         --bam "${bam}" \\
         --refs "${refs}" \\
         --output_prefix "${prefix}" \\

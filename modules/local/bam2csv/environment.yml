@@ -5,5 +5,5 @@ channels:
   - bioconda
 dependencies:
   - python
-  - pysam
+  - "pysam"
   - numpy

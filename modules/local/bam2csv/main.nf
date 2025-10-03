@@ -25,7 +25,7 @@ process BAM2CSV {
     python ${script} \
         --genome_cds_filepaths "${genome2cds}" \\
         --genome_contig_mapping "${genome_contig_mapping}" \\
-        --genome_species "${genome_species}"" \\
+        --genome_species "${genome_species}" \\
         --bam "${bam}" \\
         --refs "${refs}" \\
         --output_prefix "${prefix}" \\

@@ -110,17 +110,11 @@ workflow GFFP {
         }
     BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
 
-    genome2cds = dbs.genome_catalogue
-        .map { meta, fp ->
-            file("${fp}/${meta.files.genome2cds}")
-        }
-        .first()
     profile_ch = BOWTIE2_ALIGN.out.bam
-        .combine(genome2cds)
         .join(SOURMASH2FASTA.out.contigs)
         .join(SOURMASH2FASTA.out.fasta)    
-        .map { meta, bam, genome_cds, genome_contigs, refs -> 
-            [meta, bam, genome_cds, genome_contigs, file(params.genome_species), refs] 
+        .map { meta, bam, genome_contigs, refs -> 
+            [meta, bam, file(params.genome2cds), genome_contigs, file(params.genome_species), refs] 
         }
     BAM2CSV(profile_ch, false)
 

@@ -101,13 +101,6 @@ if __name__ == '__main__':
         for l in f:
             k,v = [v.strip() for v in l.split('\t')]
             genome2species[k] = v
-    species2genome = defaultdict(set)
-    for k,v in genome2species.items():
-        species2genome[v].add(k)
-    species2genome = dict(species2genome)
-
-    contig2species = {k:genome2species[clean_name(v)] for k,v in contig2genome.items()}
-
 
     contig_lengths = {k:len(v) for k,v in read_fasta(args.refs).items()}
 
@@ -145,7 +138,7 @@ if __name__ == '__main__':
         align_score = read.get_tag("AS")
         
         genome = contig2genome[reference]
-        species = genome2species[genome]
+        species = genome2species[genome] if genome in genome2species else genome
         
         if not query in query_index:
             query_index[query] = len(query_list)
@@ -252,7 +245,7 @@ if __name__ == '__main__':
     
     genomes_coverage = {}
     for genome, mappings in genome_greedy_mappings.items():
-        print("Calculating genome coverages:", datetime.datetime.now(), genome2species[genome_list[genome]], genome_list[genome])
+        print("Calculating genome coverages:", datetime.datetime.now(), genome_list[genome])
         contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
     
         for k,ts in mappings.items():

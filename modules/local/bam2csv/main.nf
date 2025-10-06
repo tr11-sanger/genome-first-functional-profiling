@@ -12,9 +12,9 @@ process BAM2CSV {
     val delete_bam
 
     output:
-    tuple val(meta), path("output/*species_coverage.tsv"), emit: species_profile
-    tuple val(meta), path("output/*genome_coverage.tsv"), emit: genome_profile
-    tuple val(meta), path("output/*species_cds_coverage.tsv"), path("output/*species_index.txt"), emit: species_cds_profile
+    tuple val(meta), path("output/*species_coverage.tsv.gz"), emit: species_profile
+    tuple val(meta), path("output/*genome_coverage.tsv.gz"), emit: genome_profile
+    tuple val(meta), path("output/*species_cds_coverage.tsv.gz"), path("output/*species_index.txt.gz"), emit: species_cds_profile
     tuple val(meta), path("output/*mapping_statistics.json"), emit: mapping_statistics
 
     script:
@@ -37,10 +37,10 @@ process BAM2CSV {
     def prefix = task.ext.prefix ? task.ext.prefix : meta.id 
     """
     mkdir output
-    touch "output/${prefix}_species_coverage.tsv"
-    touch "output/${prefix}_genome_coverage.tsv"
-    touch "output/${prefix}_species_cds_coverage.tsv"
-    touch "output/${prefix}_species_index.txt"
+    touch "output/${prefix}_species_coverage.tsv.gz"
+    touch "output/${prefix}_genome_coverage.tsv.gz"
+    touch "output/${prefix}_species_cds_coverage.tsv.gz"
+    touch "output/${prefix}_species_index.txt.gz"
     touch "output/${prefix}_mapping_statistics.json"
     """
 }

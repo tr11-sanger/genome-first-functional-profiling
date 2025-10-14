@@ -18,7 +18,7 @@ process BAM2CSV {
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
     def script = "${moduleDir}/bin/bam2csv_sqlite.py"
     """
-    python ${script} \
+    python ${script} \\
         --genome_cds_filepaths "${genome2cds}" \\
         --genome_contig_mapping "${genome_contig_mapping}" \\
         --genome_species "${genome_species}" \\

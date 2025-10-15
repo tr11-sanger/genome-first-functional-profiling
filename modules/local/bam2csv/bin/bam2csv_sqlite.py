@@ -379,7 +379,11 @@ if __name__ == '__main__':
         mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
-        species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth))
+        cur = db.cursor()
+        cur.execute(f'SELECT DISTINCT name FROM query WHERE idx IN ({','.join(mappings)});')
+        mapped_read_pairs = int(cur.fetchone()[0])
+
+        species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     
     mappings = None
     contig_coverage_depth = None
@@ -666,7 +670,11 @@ if __name__ == '__main__':
         mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
-        genomes_coverage[genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth))
+        cur = db.cursor()
+        cur.execute(f'SELECT DISTINCT name FROM query WHERE idx IN ({','.join(mappings)});')
+        mapped_read_pairs = int(cur.fetchone()[0])
+
+        genomes_coverage[genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     
     mappings = None
 
@@ -684,8 +692,8 @@ if __name__ == '__main__':
             f.write(f'{genome_list[genome]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
     with gzip.open(out_dir / f"{prefix}species_cds_coverage.tsv.gz", 'wt') as f:
         for species,d in species_cds_cluster_coverage.items():
-            for (cds,partial),(depth,b,e,r,l) in d.items():
-                f.write(f'{species}\t{cluster_list[cds]}\t{1 if partial else 0}\t{depth}\t{b}\t{e}\t{r}\t{l}\n')
+            for cds,(depth,b,e,r,l) in d.items():
+                f.write(f'{species}\t{cluster_list[cds]}\t{depth}\t{b}\t{e}\t{r}\t{l}\n')
     with gzip.open(out_dir / f"{prefix}species_index.txt.gz", 'wt') as f:
         for s in species_list:
             f.write(f'{s}\n')

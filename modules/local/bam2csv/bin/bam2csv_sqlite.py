@@ -380,7 +380,7 @@ if __name__ == '__main__':
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
         cur = db.cursor()
-        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join(mappings)});')
+        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join([str(v) for v in mappings])});')
         mapped_read_pairs = int(cur.fetchone()[0])
 
         species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
@@ -671,7 +671,7 @@ if __name__ == '__main__':
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
         cur = db.cursor()
-        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join(mappings)});')
+        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join([str(v) for v in mappings])});')
         mapped_read_pairs = int(cur.fetchone()[0])
 
         genomes_coverage[genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)

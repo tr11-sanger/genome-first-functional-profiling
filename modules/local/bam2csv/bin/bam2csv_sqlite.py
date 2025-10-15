@@ -217,7 +217,7 @@ if __name__ == '__main__':
         align_score = read.get_tag("AS")
         
         genome = contig2genome[reference]
-        species = genome2species[genome]
+        species = genome2species[genome] if genome in genome2species else 'unknown'
         
         rlength = rend-rstart
         if not all([ani>=args.min_ani, alength>=args.min_align_length, alength<=args.max_align_length]):

@@ -76,6 +76,12 @@ def read_fasta(fp):
             seqs[header] = ''.join(seq_lines)
     return seqs
 
+def batch(l, n):
+    for i in range((len(l)//n)+1):
+        if i*n<len(l):
+            yield l[i*n:(i+1)*n]
+
+
 if __name__ == '__main__':
     # load data
 
@@ -184,6 +190,8 @@ if __name__ == '__main__':
     db.commit()
 
 
+    commit_n = 100_000
+    query_batch_n = 100_000
     # Read BAM
     
     samfile = pysam.AlignmentFile(args.bam, "rb")
@@ -196,8 +204,8 @@ if __name__ == '__main__':
     genome_index = {}
     species_list = []
     species_index = {}
+
     transaction_count = 0
-    commit_n = 100_000
     for i,read in enumerate(samfile):
         if i%3_000_000==0:
             print(datetime.datetime.now(), i)
@@ -320,7 +328,7 @@ if __name__ == '__main__':
         cur = db.cursor()
         cur.execute(f'SELECT species,genome,query FROM species_genome_read_mappings WHERE species NOT IN ({",".join([str(v) for v in assigned_species])});')
         species_read_counts = defaultdict(lambda :defaultdict(set))
-        for s,g,q in cur.fetchall():
+        for s,g,q in cur:
             species_read_counts[s][g].add(q)
         species_read_counts = {k:max([len(vs) for vs in d.values()]) for k,d in species_read_counts.items()}
         
@@ -332,19 +340,24 @@ if __name__ == '__main__':
         
         cur = db.cursor()
         cur.execute(f'SELECT query FROM species_genome_read_mappings WHERE species={top_species};')
-        query_idxs = {v for v, in cur.fetchall()}
+        query_idxs = {v for v, in cur}
         
-        cur = db.cursor()
-        cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in query_idxs])});')
+        query_names = set()
+        for query_idxs_ in batch(list(query_idxs), query_batch_n):
+            cur = db.cursor()
+            cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in query_idxs_])});')
+            query_names.update({f"\"{v}\"" for v, in cur})
         query_idxs = None
-        query_names = {f"\"{v}\"" for v, in cur.fetchall()}
         
-        cur = db.cursor()
-        cur.execute(f'SELECT idx FROM query WHERE name IN ({",".join(query_names)});')
+        reassigned_reads = set()
+        for query_names_ in batch(list(query_names), query_batch_n):
+            cur = db.cursor()
+            cur.execute(f'SELECT idx FROM query WHERE name IN ({",".join(query_names_)});')
+            reassigned_reads.update({v for v, in cur})
         query_names = None
-        reassigned_reads = {v for v, in cur.fetchall()}
         
-        db.execute(f'DELETE FROM species_genome_read_mappings WHERE (query IN ({",".join([str(v) for v in reassigned_reads])})) AND (species!={top_species});')
+        for reassigned_reads_ in batch(list(reassigned_reads), query_batch_n):
+            db.execute(f'DELETE FROM species_genome_read_mappings WHERE (query IN ({",".join([str(v) for v in reassigned_reads_])})) AND (species!={top_species});')
         reassigned_reads = None
         db.commit()    
         
@@ -353,7 +366,7 @@ if __name__ == '__main__':
     species_genomes_coverage = defaultdict(dict)
     cur = db.cursor()
     cur.execute('SELECT DISTINCT species,genome FROM species_genome_read_mappings;')
-    for species, genome in cur.fetchall():
+    for species, genome in cur:
         print('Calculating species coverage:', datetime.datetime.now(), species_list[species])
         
         contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
@@ -361,7 +374,7 @@ if __name__ == '__main__':
         cur = db.cursor()
         cur.execute(f'SELECT query,reference,rstart,rend,align_score,ani FROM species_genome_read_mappings WHERE genome={genome};')
         mappings = defaultdict(lambda :(None,None,None,0,0))
-        for q,r,rs,re,a,ani in cur.fetchall():
+        for q,r,rs,re,a,ani in cur:
             if a>=mappings[q][-2]:
                 mappings[q] = (r,rs,re,a,ani)
         
@@ -379,9 +392,12 @@ if __name__ == '__main__':
         mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
-        cur = db.cursor()
-        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join([str(v) for v in mappings])});')
-        mapped_read_pairs = int(cur.fetchone()[0])
+        mapped_read_pairs = set()
+        for mappings_ in batch(list(mappings), query_batch_n):
+            cur = db.cursor()
+            cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in mappings_])});')
+            mapped_read_pairs.update({v for v, in cur})
+        mapped_read_pairs = len(mapped_read_pairs)
 
         species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     
@@ -396,7 +412,7 @@ if __name__ == '__main__':
     cur = db.cursor()
     cur.execute('SELECT species,genome FROM species_genome_read_mappings;')
     species_genomes = defaultdict(set)
-    for species,genome in cur.fetchall():
+    for species,genome in cur:
         species_genomes[species].add(genome)
         
     cluster_list = []
@@ -413,7 +429,7 @@ if __name__ == '__main__':
             cur = db.cursor()
             cur.execute(f'SELECT query,reference,rstart,rend,align_score,ani FROM species_genome_read_mappings WHERE genome={genome};')
             mappings = defaultdict(set)
-            for q,r,rs,re,a,ani in cur.fetchall():
+            for q,r,rs,re,a,ani in cur:
                 mappings[q].add((r,rs,re,a,ani))
 
             cds_file = []
@@ -494,7 +510,7 @@ if __name__ == '__main__':
         cur = db.cursor()
         cur.execute(f'SELECT cluster,partial,query,proportion_l FROM cds_read_mappings WHERE species={species};')
         cds_coverages = defaultdict(lambda :defaultdict(int))
-        for c,p,q,l in cur.fetchall():
+        for c,p,q,l in cur:
             if l>cds_coverages[(c,p)][q]:
                 cds_coverages[(c,p)][q] = l
         cds_coverages = {k:sum(list(d.values())) for k,d in cds_coverages.items()}
@@ -515,21 +531,23 @@ if __name__ == '__main__':
             cur.execute(f'SELECT idx,query,genome,reference,cstart,cend FROM cds_read_mappings WHERE cluster={top_cds};')
             reassigned_reads = set()
             starts_ends = defaultdict(set)
-            for idx,q,g,c,cs,ce in cur.fetchall():
+            for idx,q,g,c,cs,ce in cur:
                 reassigned_reads.add(q)
                 starts_ends[(g,c)].add((cs,ce))
         
             # prefetch reads for reassigned_cdss
-            cur.execute(f'''
-                SELECT idx,cluster,query,genome,reference,rstart,rend,qstart,qend 
-                FROM cds_read_mappings 
-                WHERE query IN ({",".join([str(v) for v in reassigned_reads])});
-            ''')
             reassigned_cdss = defaultdict(list)
-            for idx,cds,q,g,c,rs,re,qs,qe in cur.fetchall():
-                if cds in assigned_cdss:
-                    continue
-                reassigned_cdss[cds].append((idx,q,g,c,rs,re,qs,qe))
+            for reassigned_reads_ in batch(list(reassigned_reads), query_batch_n):
+                cur = db.cursor()
+                cur.execute(f'''
+                    SELECT idx,cluster,query,genome,reference,rstart,rend,qstart,qend 
+                    FROM cds_read_mappings 
+                    WHERE query IN ({",".join([str(v) for v in reassigned_reads_])});
+                ''')
+                for idx,cds,q,g,c,rs,re,qs,qe in cur:
+                    if cds in assigned_cdss:
+                        continue
+                    reassigned_cdss[cds].append((idx,q,g,c,rs,re,qs,qe))
                 
             for k,vs in reassigned_cdss.items():
                 # remove reads that do not overlap with top CDS
@@ -541,7 +559,8 @@ if __name__ == '__main__':
                         rm_idx.add(idx)
                 
                 # remove reads 
-                db.execute(f'DELETE FROM cds_read_mappings WHERE idx IN ({",".join([str(v) for v in rm_idx])});')
+                for rm_idx_ in batch(list(rm_idx), query_batch_n):
+                    db.execute(f'DELETE FROM cds_read_mappings WHERE idx IN ({",".join([str(v) for v in rm_idx_])});')
                 db.commit()
                 
                 # recalculate CDS coverage
@@ -549,7 +568,7 @@ if __name__ == '__main__':
                 cds_coverages[(k,1)] = defaultdict(int)
                 cur = db.cursor()
                 cur.execute(f'SELECT cluster,partial,query,proportion_l FROM cds_read_mappings WHERE species={species} AND cluster={k};')
-                for c,p,q,l in cur.fetchall():
+                for c,p,q,l in cur:
                     if l>cds_coverages[(c,p)][q]:
                         cds_coverages[(c,p)][q] = l
                 cds_coverages = {k_:sum(list(v.values())) if isinstance (v, dict) else v for k_,v in cds_coverages.items()}
@@ -560,7 +579,7 @@ if __name__ == '__main__':
     species_clusters = defaultdict(set)
     cur = db.cursor()
     cur.execute('SELECT DISTINCT species,cluster FROM cds_read_mappings;')
-    for species, cluster in cur.fetchall():
+    for species, cluster in cur:
         species_clusters[species].add(cluster)
 
     species_cds_cluster_coverage = defaultdict(dict)
@@ -574,7 +593,7 @@ if __name__ == '__main__':
                 WHERE (species={species}) AND (cluster={cluster});
             ''')
             mappings = defaultdict(lambda :(None,None,None,None,None,None,0))
-            for q,g,r,rs,re,cs,ce,pl in cur.fetchall():
+            for q,g,r,rs,re,cs,ce,pl in cur:
                 if pl>=mappings[q][-1]:
                     mappings[q] = (g,r,rs,re,cs,ce,pl)
             
@@ -603,7 +622,7 @@ if __name__ == '__main__':
     cur = db.cursor()
     cur.execute('SELECT species,genome FROM species_genome_read_mappings;')
     species_genomes = defaultdict(set)
-    for species,genome in cur.fetchall():
+    for species,genome in cur:
         species_genomes[species].add(genome)
 
     for species, genomes in species_genomes.items():
@@ -613,7 +632,7 @@ if __name__ == '__main__':
             cur = db.cursor()
             cur.execute(f'SELECT genome,query FROM species_genome_read_mappings WHERE (species={species}) AND (genome NOT IN ({",".join([str(v) for v in assigned_genomes])}));')
             genome_read_counts = defaultdict(set)
-            for k,v in cur.fetchall():
+            for k,v in cur:
                 genome_read_counts[k].add(v)
             genome_read_counts = {k:len(v) for k,v in genome_read_counts.items()}
             
@@ -625,19 +644,24 @@ if __name__ == '__main__':
             
             cur = db.cursor()
             cur.execute(f'SELECT query FROM species_genome_read_mappings WHERE genome={top_genome};')
-            query_idxs = {v for v, in cur.fetchall()}
+            query_idxs = {v for v, in cur}
 
-            cur = db.cursor()
-            cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in query_idxs])});')
+            query_names = set()
+            for query_idxs_ in batch(list(query_idxs), query_batch_n):
+                cur = db.cursor()
+                cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in query_idxs_])});')
+                query_names.update({f"\"{v}\"" for v, in cur})
             query_idxs = None
-            query_names = {f"\"{v}\"" for v, in cur.fetchall()}
 
-            cur = db.cursor()
-            cur.execute(f'SELECT idx FROM query WHERE name IN ({",".join(query_names)});')
+            reassigned_reads = set()
+            for query_names_ in batch(list(query_names), query_batch_n):
+                cur = db.cursor()
+                cur.execute(f'SELECT idx FROM query WHERE name IN ({",".join(query_names_)});')
+                reassigned_reads.update({v for v, in cur})
             query_names = None
-            reassigned_reads = {v for v, in cur.fetchall()}
 
-            db.execute(f'DELETE FROM species_genome_read_mappings WHERE (query IN ({",".join([str(v) for v in reassigned_reads])})) AND (genome!={top_genome});')
+            for reassigned_reads_ in batch(list(reassigned_reads), query_batch_n):
+                db.execute(f'DELETE FROM species_genome_read_mappings WHERE (query IN ({",".join([str(v) for v in reassigned_reads_])})) AND (genome!={top_genome});')
             reassigned_reads = None
             db.commit()
 
@@ -646,7 +670,7 @@ if __name__ == '__main__':
     genomes_coverage = {}
     cur = db.cursor()
     cur.execute('SELECT DISTINCT species,genome FROM species_genome_read_mappings;')
-    for species,genome in cur.fetchall():
+    for species,genome in cur:
         print('Calculating genome coverage:', datetime.datetime.now(), species_list[species], genome_list[genome])
         
         contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
@@ -654,7 +678,7 @@ if __name__ == '__main__':
         cur = db.cursor()
         cur.execute(f'SELECT query,reference,rstart,rend,align_score,ani FROM species_genome_read_mappings WHERE genome={genome};')
         mappings = defaultdict(set)
-        for q,r,rs,re,a,ani in cur.fetchall():
+        for q,r,rs,re,a,ani in cur:
             mappings[q].add((r,rs,re,a,ani))
         
         for k,ts in mappings.items():
@@ -670,9 +694,12 @@ if __name__ == '__main__':
         mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
         genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
-        cur = db.cursor()
-        cur.execute(f'SELECT COUNT(DISTINCT name) FROM query WHERE idx IN ({",".join([str(v) for v in mappings])});')
-        mapped_read_pairs = int(cur.fetchone()[0])
+        mapped_read_pairs = set()
+        for mappings_ in batch(list(mappings), query_batch_n):
+            cur = db.cursor()
+            cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in mappings_])});')
+            mapped_read_pairs.update({v for v, in cur})
+        mapped_read_pairs = len(mapped_read_pairs)
 
         genomes_coverage[genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     

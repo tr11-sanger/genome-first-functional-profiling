@@ -4,7 +4,7 @@ import gzip
 from pathlib import Path
 from collections import defaultdict
 import datetime
-import fileinput
+import sys
 import os
 import argparse
 import sqlite3
@@ -335,7 +335,7 @@ if __name__ == '__main__':
             db.commit()
 
     reads = []
-    for i,read in enumerate(fileinput.input()):
+    for i,read in enumerate(sys.stdin):
         if i%3_000_000==0:
             print(datetime.datetime.now(), i)
             

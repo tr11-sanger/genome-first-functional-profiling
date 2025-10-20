@@ -202,8 +202,20 @@ if __name__ == '__main__':
     }
 
     def parse_cigar(cigar_str):
+        cigar_codes = {
+            'M': (True, True),
+            'I': (True, False),
+            'D': (False, True),
+            'N': (False, True),
+            'S': (True, False),
+            'H': (False, False),
+            'P': (False, False),
+            '=': (True, True),
+            'X': (True, True),
+        }
         qalength = 0
         ralength = 0
+        alength = 0
         consumes = (False, False)
         v = []
         for c in cigar_str:
@@ -214,11 +226,13 @@ if __name__ == '__main__':
                     qalength += v_int
                 if consumes[1]:
                     ralength += v_int
+                if consumes[0] or consumes[1]:
+                    alength += v_int
                 v = []
             else:
                 v.append(c)
     
-        return qalength, ralength
+        return qalength, ralength, alength
         
     query_count = 0
     query_index = {}
@@ -273,7 +287,7 @@ if __name__ == '__main__':
             return
             
         query = read_[0]
-        qlength, alength = parse_cigar(read_[5])
+        qalength, ralength, alength = parse_cigar(read_[5])
         mapq = int(read_[4])
         flags_int = int(read_[1])
         paired = flags_int & 1
@@ -283,7 +297,7 @@ if __name__ == '__main__':
         reference = read_[2]
         rlength = int(read_[7])
         qstart, rstart = 0, int(read_[3])
-        qend, rend = qlength, rstart+alength
+        qend, rend = qalength, rstart+ralength
         ani = 1-(nm_tag/alength)
         align_score = as_tag
 

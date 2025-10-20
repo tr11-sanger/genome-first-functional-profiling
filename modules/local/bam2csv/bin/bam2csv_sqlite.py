@@ -236,7 +236,25 @@ if __name__ == '__main__':
     query_batch_n = 100_000
     nm_suffix = 'NM:i:'
     as_suffix = 'AS:i:'
+
     def parse_sam_line(read):
+        global query_count
+        global query_index
+        global reference_list
+        global reference_index
+        global genome_list
+        global genome_index
+        global species_list
+        global species_index
+        global transaction_count
+        global commit_n
+        global read_batch_n
+        global query_batch_n
+        global nm_suffix
+        global as_suffix
+        global contig2genome
+        global genome2species
+
         read_ = read.split('\t')
         
         if not read_[9]:

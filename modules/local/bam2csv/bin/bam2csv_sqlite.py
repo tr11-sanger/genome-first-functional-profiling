@@ -287,17 +287,17 @@ if __name__ == '__main__':
             return
             
         query = read_[0]
-        qalength, ralength, alength = parse_cigar(read_[5])
+        _, ralength, alength = parse_cigar(read_[5])
         mapq = int(read_[4])
         flags_int = int(read_[1])
         paired = flags_int & 1
-        read1 = flags_int & 4
+        read1 = flags_int & 64
         read2 = (False if read1 else True) if paired else None
-        forward = flags_int & 16
+        # forward = flags_int & (16 if read1 else 32) 
         reference = read_[2]
-        rlength = int(read_[7])
-        qstart, rstart = 0, int(read_[3])
-        qend, rend = qalength, rstart+ralength
+        # rlength = int(read_[7])
+        rstart = int(read_[3])
+        rend = rstart+ralength
         ani = 1-(nm_tag/alength)
         align_score = as_tag
 

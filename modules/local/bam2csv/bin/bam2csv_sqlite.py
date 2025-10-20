@@ -4,15 +4,12 @@ import gzip
 from pathlib import Path
 from collections import defaultdict
 import datetime
-import pysam
+import fileinput
 import os
 import argparse
 import sqlite3
 
 parser = argparse.ArgumentParser(description='Parse BAM to generate taxonomic and functional profiles. Reassigns multiple mappings with winner-takes-all strategy. Calculates coverage depth and breadth for each species, genome and CDS.')
-parser.add_argument('-b', "--bam", type=str,
-                    required=True,
-                    help="Read mapping BAM filepath.")
 parser.add_argument('-r', "--refs", type=str,
                     required=True,
                     help="Reference genomes FASTA filepath.")
@@ -190,12 +187,39 @@ if __name__ == '__main__':
     db.commit()
 
 
-    commit_n = 100_000
-    query_batch_n = 100_000
     # Read BAM
-    
-    samfile = pysam.AlignmentFile(args.bam, "rb")
 
+    cigar_codes = {
+        'M': (True, True),
+        'I': (True, False),
+        'D': (False, True),
+        'N': (False, True),
+        'S': (True, False),
+        'H': (False, False),
+        'P': (False, False),
+        '=': (True, True),
+        'X': (True, True),
+    }
+
+    def parse_cigar(cigar_str):
+        qalength = 0
+        ralength = 0
+        consumes = (False, False)
+        v = []
+        for c in cigar_str:
+            if c in cigar_codes:
+                v_int = int(''.join(v))
+                consumes = cigar_codes[c]
+                if consumes[0]:
+                    qalength += v_int
+                if consumes[1]:
+                    ralength += v_int
+                v = []
+            else:
+                v.append(c)
+    
+        return qalength, ralength
+        
     query_count = 0
     query_index = {}
     reference_list = []
@@ -206,31 +230,51 @@ if __name__ == '__main__':
     species_index = {}
 
     transaction_count = 0
-    for i,read in enumerate(samfile):
-        if i%3_000_000==0:
-            print(datetime.datetime.now(), i)
-            
-        if not read.aligned_pairs:
-            continue
-            
-        query = read.query_name
-        read2 = (False if read.is_read1 else True) if read.is_paired else None
-        forward = read.is_forward
-        reference = read.reference_name
-        qstart, rstart = read.aligned_pairs[0]
-        qend, rend = read.aligned_pairs[-1]
-        ani = 1-(read.get_tag("NM")/read.query_alignment_length)
-        alength = qend-qstart
-        rlength = read.reference_length
-        align_score = read.get_tag("AS")
+
+    commit_n = 100_000
+    read_batch_n = 10_000_000
+    query_batch_n = 100_000
+    nm_suffix = 'NM:i:'
+    as_suffix = 'AS:i:'
+    def parse_sam_line(read):
+        read_ = read.split('\t')
         
+        if not read_[9]:
+            return
+    
+        for v in read_:
+            if v[:len(nm_suffix)]==nm_suffix:
+                nm_tag = int(v[len(nm_suffix):])
+                continue
+            if v[:len(as_suffix)]==as_suffix:
+                as_tag = int(v[len(as_suffix):])
+                continue
+    
+        mapq = int(read_[4])
+        if mapq==0:
+            return
+            
+        query = read_[0]
+        qlength, alength = parse_cigar(read_[5])
+        mapq = int(read_[4])
+        flags_int = int(read_[1])
+        paired = flags_int & 1
+        read1 = flags_int & 4
+        read2 = (False if read1 else True) if paired else None
+        forward = flags_int & 16
+        reference = read_[2]
+        rlength = int(read_[7])
+        qstart, rstart = 0, int(read_[3])
+        qend, rend = qlength, rstart+alength
+        ani = 1-(nm_tag/alength)
+        align_score = as_tag
+
+        if not all([ani>=args.min_ani, alength>=args.min_align_length, alength<=args.max_align_length]):
+            return
+
         genome = contig2genome[reference]
         species = genome2species[genome] if genome in genome2species else 'unknown'
-        
-        rlength = rend-rstart
-        if not all([ani>=args.min_ani, alength>=args.min_align_length, alength<=args.max_align_length]):
-            continue
-        
+
         if not (query,read2) in query_index:
             query_index[(query,read2)] = int(query_count)
             query_count += 1
@@ -289,8 +333,24 @@ if __name__ == '__main__':
         
         if transaction_count%commit_n == 0:
             db.commit()
+
+    reads = []
+    for i,read in enumerate(fileinput.input()):
+        if i%3_000_000==0:
+            print(datetime.datetime.now(), i)
+            
+        reads.append(read)
+
+        if len(reads)>=read_batch_n:
+            for read in reads:
+                parse_sam_line(read)
+            reads = []
+        
     else:
+        for read in reads:
+            parse_sam_line(read)
         db.commit()
+        del reads
 
     query_index = None
 

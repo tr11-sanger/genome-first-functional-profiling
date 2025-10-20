@@ -5,5 +5,5 @@ channels:
   - bioconda
 dependencies:
   - python
-  - "pysam"
   - numpy
+  - bioconda::samtools=1.21

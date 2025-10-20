@@ -355,7 +355,7 @@ if __name__ == '__main__':
     reads = []
     for i,read in enumerate(sys.stdin):
         if i%3_000_000==0:
-            print(datetime.datetime.now(), i)
+            print("Reading BAM:", datetime.datetime.now(), i, flush=True)
             
         reads.append(read)
 
@@ -396,7 +396,7 @@ if __name__ == '__main__':
 
     assigned_species = set()
 
-    print('Assigning reads to species:', datetime.datetime.now(), len(assigned_species))
+    print('Assigning reads to species:', datetime.datetime.now(), len(assigned_species), flush=True)
     
     cur = db.cursor()
     cur.execute('SELECT COUNT(DISTINCT species) FROM species_genome_read_mappings;')
@@ -414,7 +414,7 @@ if __name__ == '__main__':
         assigned_species.add(top_species)
         del species_read_counts[top_species]
         
-        print('Assigning reads to species:', datetime.datetime.now(), len(assigned_species), n_species, species_list[top_species])
+        print('Assigning reads to species:', datetime.datetime.now(), len(assigned_species), n_species, species_list[top_species], flush=True)
         
         cur = db.cursor()
         cur.execute(f'SELECT query FROM species_genome_read_mappings WHERE species={top_species};')
@@ -445,7 +445,7 @@ if __name__ == '__main__':
     cur = db.cursor()
     cur.execute('SELECT DISTINCT species,genome FROM species_genome_read_mappings;')
     for species, genome in cur:
-        print('Calculating species coverage:', datetime.datetime.now(), species_list[species])
+        print('Calculating species coverage:', datetime.datetime.now(), species_list[species], flush=True)
         
         contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
         
@@ -602,7 +602,7 @@ if __name__ == '__main__':
                 del cds_coverages[(top_cds,0)]
             if (top_cds,1) in cds_coverages:
                 del cds_coverages[(top_cds,1)]
-            # print(datetime.datetime.now(), cluster_list[top_cds], len(assigned_cdss))
+            # print(datetime.datetime.now(), cluster_list[top_cds], len(assigned_cdss), flush=True)
             
             # get reassigned reads and locations of top cds in all genomes
             cur = db.cursor()
@@ -651,7 +651,7 @@ if __name__ == '__main__':
                         cds_coverages[(c,p)][q] = l
                 cds_coverages = {k_:sum(list(v.values())) if isinstance (v, dict) else v for k_,v in cds_coverages.items()}
         
-        print('Assigning reads to CDSs:', datetime.datetime.now(), species_list[species], len(assigned_cdss))
+        print('Assigning reads to CDSs:', datetime.datetime.now(), species_list[species], len(assigned_cdss), flush=True)
 
     
     species_clusters = defaultdict(set)
@@ -662,7 +662,7 @@ if __name__ == '__main__':
 
     species_cds_cluster_coverage = defaultdict(dict)
     for species, clusters in species_clusters.items():
-        print('Calculating CDS coverage:', datetime.datetime.now(), species_list[species], len(clusters))
+        print('Calculating CDS coverage:', datetime.datetime.now(), species_list[species], len(clusters), flush=True)
         for cluster in clusters:
             cur = db.cursor()
             cur.execute(f'''
@@ -718,7 +718,7 @@ if __name__ == '__main__':
             assigned_genomes.add(top_genome)
             del genome_read_counts[top_genome]
             
-            print('Assigning reads to genomes:', datetime.datetime.now(), len(assigned_genomes), species_list[species], genome_list[top_genome])
+            print('Assigning reads to genomes:', datetime.datetime.now(), len(assigned_genomes), species_list[species], genome_list[top_genome], flush=True)
             
             cur = db.cursor()
             cur.execute(f'SELECT query FROM species_genome_read_mappings WHERE genome={top_genome};')
@@ -749,7 +749,7 @@ if __name__ == '__main__':
     cur = db.cursor()
     cur.execute('SELECT DISTINCT species,genome FROM species_genome_read_mappings;')
     for species,genome in cur:
-        print('Calculating genome coverage:', datetime.datetime.now(), species_list[species], genome_list[genome])
+        print('Calculating genome coverage:', datetime.datetime.now(), species_list[species], genome_list[genome], flush=True)
         
         contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
         

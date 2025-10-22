@@ -2,8 +2,10 @@ process SOURMASH2FASTA {
     tag "${meta.id}"
     label 'process_single'
 
+    conda "${moduleDir}/environment.yml"
+
     input:
-    tuple val(meta), path(sourmash_results)
+    tuple val(meta), path(sourmash_results), path(genome_species)
     path(lookup)
 
     output:
@@ -17,8 +19,10 @@ process SOURMASH2FASTA {
 
     script:
     def args = task.ext.args ?: ''
+    def script = "${moduleDir}/bin/sourmash2fasta.py"
     """
-    gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
+    # gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
+    python ${script} -s $sourmash_results -g $genome_species -o data.tmp
     join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp $lookup > genomes_table.csv
     rm data.tmp
     

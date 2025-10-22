@@ -96,7 +96,13 @@ workflow GFFP {
             file("${fp}/${meta.files.filepath_lookup}")
         }
         .first()
-    SOURMASH2FASTA(SOURMASH_GATHER.out.result, genome_fp_lookup_table)
+    sourmash2fasta_ch = SOURMASH_GATHER.out.result
+        .map{ meta,fp -> [meta, fp, file(params.genome_species)] }
+
+    SOURMASH2FASTA(
+        sourmash2fasta_ch,
+        genome_fp_lookup_table
+    )
 
     BOWTIE2_BUILD(SOURMASH2FASTA.out.fasta)
 

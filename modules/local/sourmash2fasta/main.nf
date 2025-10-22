@@ -23,8 +23,10 @@ process SOURMASH2FASTA {
     """
     # gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
     python ${script} -s $sourmash_results -g $genome_species -o data.tmp
-    join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp $lookup > genomes_table.csv
+    cat data.tmp | sort > data.tmp2
+    join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp2 $lookup > genomes_table.csv
     rm data.tmp
+    rm data.tmp2
     
     echo -n '' > contig_mapping.csv
     echo -n '' > genomes.fna

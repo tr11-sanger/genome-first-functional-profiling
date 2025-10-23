@@ -16,9 +16,8 @@ process BAM2CSV {
     script:
     def prefix = task.ext.prefix ? task.ext.prefix : meta.id 
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
-    def script = "${moduleDir}/bin/bam2csv_sqlite.py"
     """
-    samtools view -@ 1 ${bam} | python ${script} \\
+    samtools view -@ 1 ${bam} | python bam2csv_sqlite.py \\
         --genome_cds_filepaths "${genome2cds}" \\
         --genome_contig_mapping "${genome_contig_mapping}" \\
         --genome_species "${genome_species}" \\

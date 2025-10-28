@@ -21,7 +21,7 @@ process SOURMASH2FASTA {
     def args = task.ext.args ?: ''
     """
     # gunzip -c $sourmash_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
-    python sourmash2fasta.py -s $sourmash_results -g $genome_species -o data.tmp
+    sourmash2fasta.py -s $sourmash_results -g $genome_species -o data.tmp
     cat data.tmp | sort > data.tmp2
     join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp2 $lookup > genomes_table.csv
     rm data.tmp

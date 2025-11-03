@@ -104,7 +104,11 @@ workflow GFFP {
         genome_fp_lookup_table
     )
 
-    BOWTIE2_BUILD(SOURMASH2FASTA.out.fasta)
+    // filter out if no genomes
+    bowtie2_build_ch = SOURMASH2FASTA.out.fasta
+        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+
+    BOWTIE2_BUILD(bowtie2_build_ch)
 
     align_in_ch = reads_ch
         .join(BOWTIE2_BUILD.out.index)

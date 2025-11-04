@@ -111,7 +111,8 @@ workflow GFFP {
     BOWTIE2_BUILD(genomes_ch)
 
     align_in_ch = reads_ch
-        .join(BOWTIE2_BUILD.out.index)
+        .join(BOWTIE2_BUILD.out.index, remainder: true)
+        .filter { _meta, _reads, index -> index }
         .join(genomes_ch)
         .multiMap{ meta, reads, index, fasta -> 
             reads: [meta, reads]

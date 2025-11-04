@@ -105,14 +105,14 @@ workflow GFFP {
     )
 
     // filter out if no genomes
-    bowtie2_build_ch = SOURMASH2FASTA.out.fasta
+    genomes_ch = SOURMASH2FASTA.out.fasta
         .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
 
-    BOWTIE2_BUILD(bowtie2_build_ch)
+    BOWTIE2_BUILD(genomes_ch)
 
     align_in_ch = reads_ch
         .join(BOWTIE2_BUILD.out.index)
-        .join(SOURMASH2FASTA.out.fasta)
+        .join(genomes_ch)
         .multiMap{ meta, reads, index, fasta -> 
             reads: [meta, reads]
             index: [meta, index]
@@ -120,9 +120,11 @@ workflow GFFP {
         }
     BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
 
+    contigs_ch = SOURMASH2FASTA.out.contigs
+        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
     profile_ch = BOWTIE2_ALIGN.out.bam
-        .join(SOURMASH2FASTA.out.contigs)
-        .join(SOURMASH2FASTA.out.fasta)    
+        .join(contigs_ch)
+        .join(genomes_ch)    
         .map { meta, bam, genome_contigs, refs -> 
             [meta, bam, file(params.genome2cds), genome_contigs, file(params.genome_species), refs] 
         }

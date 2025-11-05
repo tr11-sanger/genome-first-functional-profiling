@@ -23,6 +23,9 @@ process BAM2CSV {
         --genome_species "${genome_species}" \\
         --refs "${refs}" \\
         --output_prefix "${prefix}" \\
+        --min_align_length "${params.min_align_length}" \\
+        --max_align_length "${params.max_align_length}" \\
+        --min_ani "${params.min_ani}" \\
         --output_dir output
     ${rm_cmd}
     """

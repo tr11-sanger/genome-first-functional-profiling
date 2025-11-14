@@ -13,7 +13,8 @@ include { SOURMASH_SKETCH } from '../modules/nf-core/sourmash/sketch/main'
 include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
-include { BAM2CSV } from '../modules/local/bam2csv/main'
+include { BAM2CSV_TOP } from '../modules/local/bam2csv_top/main'
+include { BAM2CSV_GREEDY } from '../modules/local/bam2csv_greedy/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,14 +130,22 @@ workflow GFFP {
         .map { meta, bam, genome_contigs, refs -> 
             [meta, bam, file(params.genome2cds), genome_contigs, file(params.genome_species), refs] 
         }
-    BAM2CSV(profile_ch, false)
+    if (params.greedy_read_reassignment) {
+        BAM2CSV_GREEDY(profile_ch, false)
+        taxonomic_profile = BAM2CSV_GREEDY.out.species_profile
+        functional_profile = BAM2CSV_GREEDY.out.species_cds_profile
+    } else {
+        BAM2CSV_TOP(profile_ch, false)
+        taxonomic_profile = BAM2CSV_TOP.out.species_profile
+        functional_profile = BAM2CSV_TOP.out.species_cds_profile
+    }
 
     emit:
     sylph_profile = SYLPH_PROFILE.out.profile_out
     sylph_query = SYLPH_QUERY.out.profile_out
     sourmash_profile = SOURMASH_GATHER.out.result
-    taxonomic_profile = BAM2CSV.out.species_profile
-    functional_profile = BAM2CSV.out.species_cds_profile
+    taxonomic_profile = taxonomic_profile
+    functional_profile = functional_profile
     versions = ch_versions                         // channel: [ path(versions.yml) ]
 }
 

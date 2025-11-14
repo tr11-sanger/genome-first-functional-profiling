@@ -1,4 +1,4 @@
-process BAM2CSV {
+process BAM2CSV_GREEDY {
     tag "${meta.id}"
     label 'process_single'
 
@@ -17,7 +17,7 @@ process BAM2CSV {
     def prefix = task.ext.prefix ? task.ext.prefix : meta.id 
     def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
     """
-    samtools view -@ 1 ${bam} | bam2csv_sqlite.py \\
+    samtools view -@ 1 ${bam} | bam2csv_sqlite_greedy.py \\
         --genome_cds_filepaths "${genome2cds}" \\
         --genome_contig_mapping "${genome_contig_mapping}" \\
         --genome_species "${genome_species}" \\

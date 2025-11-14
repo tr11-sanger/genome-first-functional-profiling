@@ -186,7 +186,7 @@ if __name__ == '__main__':
             qend INTEGER,
             cstart INTEGER,
             cend INTEGER,
-            proportion_l REAL
+            proportion_l REAL,
             ani REAL
         );
     ''')
@@ -207,7 +207,7 @@ if __name__ == '__main__':
             qend INTEGER,
             cstart INTEGER,
             cend INTEGER,
-            proportion_l REAL
+            proportion_l REAL,
             ani REAL
         );
     ''')
@@ -449,15 +449,16 @@ if __name__ == '__main__':
     db.execute('CREATE INDEX ani_idx ON species_genome_read_mappings (ani);')
     # db.execute('CREATE INDEX reference_idx ON species_genome_read_mappings (reference);')
 
-    db.execute('CREATE INDEX top_species_idx ON species_genome_read_mappings (species);')
-    db.execute('CREATE INDEX top_genome_idx ON species_genome_read_mappings (genome);')
+    db.execute('CREATE INDEX top_species_idx ON top_species_genome_read_mappings (species);')
+    db.execute('CREATE INDEX top_genome_idx ON top_species_genome_read_mappings (genome);')
+
 
     # Species profile 
     print('Assigning reads to species:', datetime.datetime.now(), flush=True)
     all_assigned = False
     while not all_assigned:
         # get top read match per genome
-        print('Trimming mappings to top match per genome:', datetime.datetime.now(), len(assigned_species), flush=True)
+        print('Trimming mappings to top match per genome:', datetime.datetime.now(), flush=True)
         cur = db.cursor()
         cur.execute(f'''
             SELECT idx,query,species
@@ -468,7 +469,7 @@ if __name__ == '__main__':
         )
 
         # identify mappings that map to the top species
-        print('Trimming mappings to only match to top species:', datetime.datetime.now(), len(assigned_species), flush=True)
+        print('Trimming mappings to only match to top species:', datetime.datetime.now(), flush=True)
         assigned_species = np.ones(n_queries, dtype=int) * -1
         good_mappings = []
         for i,q,s in cur:
@@ -482,13 +483,15 @@ if __name__ == '__main__':
         # populate top-mappings table
         for good_mappings_  in batch(list(good_mappings), query_batch_n):
             db.execute(f'''
-                INSERT INTO top_species_genome_read_mappings
-                SELECT * FROM species_genome_read_mappings
+                INSERT INTO top_species_genome_read_mappings (species, genome, query, reference, rstart, rend, align_score, ani)
+                SELECT species, genome, query, reference, rstart, rend, align_score, ani 
+                FROM species_genome_read_mappings
                 WHERE idx IN ({",".join([str(v) for v in good_mappings_])});
             ''')
             transaction_count += len(good_mappings_)
-    
-            if transaction_count%commit_n == 0:
+
+            if transaction_count>=commit_n:
+                transaction_count = 0
                 db.commit()
         else:
             db.commit()
@@ -497,21 +500,19 @@ if __name__ == '__main__':
         species_genomes_coverage = defaultdict(dict)
         cur = db.cursor()
         cur.execute('SELECT DISTINCT species,genome FROM top_species_genome_read_mappings;')
-        for species, genome in cur:
+        species_genome = [(s,g) for s,g in cur]
+        for species,genome in species_genome:
             print('Calculating species coverage:', datetime.datetime.now(), species_list[species], genome_list[genome], flush=True)
             
             contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
             
             cur = db.cursor()
             cur.execute(f'SELECT query,reference,rstart,rend,align_score,ani FROM top_species_genome_read_mappings WHERE genome={genome};')
-            mappings = defaultdict(lambda :(None,None,None,0,0))
-            for q,r,rs,re,a,ani in cur:
-                if a>=mappings[q][-2]:
-                    mappings[q] = (r,rs,re,a,ani)
+            mappings = {}
+            for q,r,rs,re_,a,ani in cur:
+                mappings[q] = (r,rs,re_,a,ani)
             
             for k,t in mappings.items():
-                if t[0] is None:
-                    continue
                 contig_coverage_depth[reference_list[t[0]]][t[1]:t[2]+1] += 1
             
             sum_len = sum([len(v) for v in contig_coverage_depth.values()])
@@ -535,10 +536,10 @@ if __name__ == '__main__':
         mappings = None
         contig_coverage_depth = None
             
-        species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1] for k,d in species_genomes_coverage.items()}
+        species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1][-1] for k,d in species_genomes_coverage.items()}
 
         # remove bottom species, or all species that fail
-        present_species = {k for k,(d,b,e,r,n,n_) in species_top_genome_coverage.items() if r>=args.min_coverage_ratio}
+        present_species = {str(k) for k,(d,b,e,r,n,n_) in species_top_genome_coverage.items() if r>=args.min_coverage_ratio}
     
         print(f'Removing {len(species_top_genome_coverage) - len(present_species)} species that are below coverage threshold:', datetime.datetime.now(), flush=True)
 
@@ -554,50 +555,13 @@ if __name__ == '__main__':
         db.commit()
 
     # genome coverage
-    genomes_coverage = {}
-    cur = db.cursor()
-    cur.execute('SELECT DISTINCT species,genome FROM top_species_genome_read_mappings;')
-    species_genome = [(s,g) for s,g in cur]
-    for species,genome in species_genome:
-        print('Calculating genome coverage:', datetime.datetime.now(), species_list[species], genome_list[genome], flush=True)
-        
-        contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome_list[genome]]}
-        
-        cur = db.cursor()
-        cur.execute(f'SELECT query,reference,rstart,rend,align_score,ani FROM top_species_genome_read_mappings WHERE genome={genome};')
-        mappings = defaultdict(set)
-        for q,r,rs,re,a,ani in cur:
-            mappings[q].add((r,rs,re,a,ani))
-        
-        for k,ts in mappings.items():
-            t = max(ts, key=lambda x:x[-2])
-            contig_coverage_depth[reference_list[t[0]]][t[1]:t[2]] += 1
-        
-        sum_len = sum([len(v) for v in contig_coverage_depth.values()])
-        if sum_len==0:
-            continue
-        genome_coverage_depth = sum([v.sum() for v in contig_coverage_depth.values()]) / sum_len
-        genome_coverage_breadth = sum([(v>0).sum() for v in contig_coverage_depth.values()]) / sum_len
-
-        mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
-        genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
-
-        mapped_read_pairs = set()
-        for mappings_ in batch(list(mappings), query_batch_n):
-            cur = db.cursor()
-            cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in mappings_])});')
-            mapped_read_pairs.update({v for v, in cur})
-        mapped_read_pairs = len(mapped_read_pairs)
-
-        genomes_coverage[genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
-    
-    mappings = None
+    genomes_coverage = {k:v for _,d in species_genomes_coverage.items() for k,v in d.items()}
 
     # CDS profile
     species_cds_cluster_coverage = defaultdict(dict)
 
     cur = db.cursor()
-    cur.execute('SELECT species,genome FROM top_species_genome_read_mappings;')
+    cur.execute('SELECT DISTINCT species,genome FROM top_species_genome_read_mappings;')
     species_genomes = defaultdict(set)
     for species,genome in cur:
         species_genomes[species].add(genome)
@@ -709,8 +673,8 @@ if __name__ == '__main__':
                 continue
             read_covered_bases.update(read_mapping_bases)
 
-            if not (g,r,cs) in cds_coverages:
-                cds_coverages[(g,r,cs)] = np.zeros(ce-cs)
+            if not (g,r,c,cs) in cds_coverages:
+                cds_coverages[(g,r,c,cs)] = np.zeros(ce-cs)
             cds_coverages[(g,r,c,cs)][rs-cs:re_-cs+1] += 1
 
         cds_coverage_summary = defaultdict(list)
@@ -725,15 +689,9 @@ if __name__ == '__main__':
 
         for cluster, l in cds_coverage_summary.items():
             ds, bs, es, rs, ls = zip(*list(l))
-            b, e, l_ = max(zip(bs, es, ls), key=lambda a,_b,_c:a)
+            b, e, l_ = max(zip(bs, es, ls), key=lambda x:x[0])
             species_cds_cluster_coverage[species][cluster] = (sum(ds), b, e, b/e, l_)
 
-        # move rows over to cds_read_mappings, delete all from species_cds_read_mappings
-        # db.execute(f'''
-        #     INSERT INTO cds_read_mappings
-        #     SELECT * FROM species_cds_read_mappings; 
-        # ''')
-        # db.commit()
         db.execute(f'''
             DELETE FROM species_cds_read_mappings; 
         ''')
@@ -745,7 +703,7 @@ if __name__ == '__main__':
     os.makedirs(out_dir, exist_ok=True)
 
     with gzip.open(out_dir / f"{prefix}species_coverage.tsv.gz", 'wt') as f:
-        for species,(genome,(d,b,e,r,n1,n2)) in species_top_genome_coverage.items():
+        for species,(d,b,e,r,n1,n2) in species_top_genome_coverage.items():
             f.write(f'{species_list[species]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
     with gzip.open(out_dir / f"{prefix}genome_coverage.tsv.gz", 'wt') as f:
         for genome,(d,b,e,r,n1,n2) in genomes_coverage.items():

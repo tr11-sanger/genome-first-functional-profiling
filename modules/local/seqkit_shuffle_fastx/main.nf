@@ -36,7 +36,7 @@ process SEQKIT_SHUFFLE_FASTX {
 
         seqkit faidx --region-file seq_ids --full-head ${fastx} \\
         ${call_gzip} \\
-        > subsampled/input/${fastx.name}
+        > subsampled/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -53,11 +53,11 @@ process SEQKIT_SHUFFLE_FASTX {
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[0]} \\
         ${call_gzip} \\
-        > subsampled/input/${fastx[0].name}
+        > subsampled/${fastx[0].name}
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[1]} \\
         ${call_gzip} \\
-        > subsampled/input/${fastx[1].name}
+        > subsampled/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -70,7 +70,7 @@ process SEQKIT_SHUFFLE_FASTX {
     if (meta.single_end) {
         """
         mkdir -p subsampled/input
-        touch subsampled/input/${fastx.name}
+        touch subsampled/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -80,8 +80,8 @@ process SEQKIT_SHUFFLE_FASTX {
     } else {
         """
         mkdir -p subsampled/input
-        touch subsampled/input/${fastx[0].name}
-        touch subsampled/input/${fastx[1].name}
+        touch subsampled/${fastx[0].name}
+        touch subsampled/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

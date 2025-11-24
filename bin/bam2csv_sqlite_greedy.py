@@ -729,6 +729,9 @@ if __name__ == '__main__':
             for k,v in cur:
                 genome_read_counts[k].add(v)
             genome_read_counts = {k:len(v) for k,v in genome_read_counts.items()}
+
+            if len(genome_read_counts) == 0:
+                break
             
             top_genome = max(genome_read_counts.items(), key=lambda x:x[1])[0]
             assigned_genomes.add(top_genome)

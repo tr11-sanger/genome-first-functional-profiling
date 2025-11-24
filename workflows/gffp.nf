@@ -15,7 +15,7 @@ include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
 include { BAM2CSV_TOP } from '../modules/local/bam2csv_top/main'
 include { BAM2CSV_GREEDY } from '../modules/local/bam2csv_greedy/main'
-include { SEQKIT_SHUFFLE_FASTX } from '../modules/local/seqkit_shuffle_fastx/main'
+include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,8 +44,8 @@ workflow GFFP {
         }
     
     if (params.reads_subsampling != -1) {
-        SEQKIT_SHUFFLE_FASTX(reads_ch, params.reads_subsampling, true)
-        reads_ch = SEQKIT_SHUFFLE_FASTX.out.fastx
+        BBMAP_SAMPLE_FASTX(reads_ch, params.reads_subsampling, true)
+        reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
     }
 
     // Fetch databases

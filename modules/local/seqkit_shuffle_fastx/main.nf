@@ -13,7 +13,7 @@ process SEQKIT_SHUFFLE_FASTX {
     val shuffle
 
     output:
-    tuple val(meta), path("${fastx.name}"), emit: fastx
+    tuple val(meta), path("subsampled/*"), emit: fastx
     path "versions.yml", emit: versions
 
     when:
@@ -31,10 +31,12 @@ process SEQKIT_SHUFFLE_FASTX {
         seqkit seq --name --only-id ${fastx} \\
         | ${head_cmd} \\
         > seq_ids
-    
+
+        mkdir subsampled
+
         seqkit faidx --region-file seq_ids --full-head ${fastx} \\
         ${call_gzip} \\
-        > ${fastx.getName()}
+        > subsampled/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -47,13 +49,15 @@ process SEQKIT_SHUFFLE_FASTX {
         | ${head_cmd} \\
         > seq_ids
     
+        mkdir subsampled
+
         seqkit faidx --region-file seq_ids --full-head ${fastx[0]} \\
         ${call_gzip} \\
-        > ${fastx[0].getName()}
+        > subsampled/${fastx[0].name}
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[1]} \\
         ${call_gzip} \\
-        > ${fastx[1].getName()}
+        > subsampled/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -65,7 +69,8 @@ process SEQKIT_SHUFFLE_FASTX {
     prefix = task.ext.prefix ? "${task.ext.prefix}.${meta.id}" : "${meta.id}"
     if (meta.single_end) {
         """
-        touch ${fastx.getName()}
+        mkdir subsampled
+        touch subsampled/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -74,8 +79,9 @@ process SEQKIT_SHUFFLE_FASTX {
         """
     } else {
         """
-        touch ${fastx[0].getName()}
-        touch ${fastx[1].getName()}
+        mkdir subsampled
+        touch subsampled/${fastx[0].name}
+        touch subsampled/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

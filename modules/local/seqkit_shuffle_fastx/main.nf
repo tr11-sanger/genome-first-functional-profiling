@@ -32,11 +32,11 @@ process SEQKIT_SHUFFLE_FASTX {
         | ${head_cmd} \\
         > seq_ids
 
-        mkdir subsampled
+        mkdir -p subsampled/input
 
         seqkit faidx --region-file seq_ids --full-head ${fastx} \\
         ${call_gzip} \\
-        > subsampled/${fastx.name}
+        > subsampled/input/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -49,15 +49,15 @@ process SEQKIT_SHUFFLE_FASTX {
         | ${head_cmd} \\
         > seq_ids
     
-        mkdir subsampled
+        mkdir -p subsampled/input
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[0]} \\
         ${call_gzip} \\
-        > subsampled/${fastx[0].name}
+        > subsampled/input/${fastx[0].name}
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[1]} \\
         ${call_gzip} \\
-        > subsampled/${fastx[1].name}
+        > subsampled/input/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -69,8 +69,8 @@ process SEQKIT_SHUFFLE_FASTX {
     prefix = task.ext.prefix ? "${task.ext.prefix}.${meta.id}" : "${meta.id}"
     if (meta.single_end) {
         """
-        mkdir subsampled
-        touch subsampled/${fastx.name}
+        mkdir -p subsampled/input
+        touch subsampled/input/${fastx.name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -79,9 +79,9 @@ process SEQKIT_SHUFFLE_FASTX {
         """
     } else {
         """
-        mkdir subsampled
-        touch subsampled/${fastx[0].name}
-        touch subsampled/${fastx[1].name}
+        mkdir -p subsampled/input
+        touch subsampled/input/${fastx[0].name}
+        touch subsampled/input/${fastx[1].name}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

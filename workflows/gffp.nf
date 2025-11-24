@@ -131,11 +131,11 @@ workflow GFFP {
             [meta, bam, file(params.genome2cds), genome_contigs, file(params.genome_species), refs] 
         }
     if (params.greedy_read_reassignment) {
-        BAM2CSV_GREEDY(profile_ch, false)
+        BAM2CSV_GREEDY(profile_ch, params.delete_bam)
         taxonomic_profile = BAM2CSV_GREEDY.out.species_profile
         functional_profile = BAM2CSV_GREEDY.out.species_cds_profile
     } else {
-        BAM2CSV_TOP(profile_ch, false)
+        BAM2CSV_TOP(profile_ch, params.delete_bam)
         taxonomic_profile = BAM2CSV_TOP.out.species_profile
         functional_profile = BAM2CSV_TOP.out.species_cds_profile
     }

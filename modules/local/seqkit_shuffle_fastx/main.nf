@@ -34,7 +34,7 @@ process SEQKIT_SHUFFLE_FASTX {
     
         seqkit faidx --region-file seq_ids --full-head ${fastx} \\
         ${call_gzip} \\
-        > ${fastx.name}
+        > ${fastx.getName()}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -49,11 +49,11 @@ process SEQKIT_SHUFFLE_FASTX {
     
         seqkit faidx --region-file seq_ids --full-head ${fastx[0]} \\
         ${call_gzip} \\
-        > ${fastx[0].name}
+        > ${fastx[0].getName()}
 
         seqkit faidx --region-file seq_ids --full-head ${fastx[1]} \\
         ${call_gzip} \\
-        > ${fastx[1].name}
+        > ${fastx[1].getName()}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -65,7 +65,7 @@ process SEQKIT_SHUFFLE_FASTX {
     prefix = task.ext.prefix ? "${task.ext.prefix}.${meta.id}" : "${meta.id}"
     if (meta.single_end) {
         """
-        touch ${fastx.name}
+        touch ${fastx.getName()}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -74,8 +74,8 @@ process SEQKIT_SHUFFLE_FASTX {
         """
     } else {
         """
-        touch ${fastx[0].name}
-        touch ${fastx[1].name}
+        touch ${fastx[0].getName()}
+        touch ${fastx[1].getName()}
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

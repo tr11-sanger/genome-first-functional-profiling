@@ -13,7 +13,7 @@ process SEQKIT_SHUFFLE_FASTX {
     val shuffle
 
     output:
-    tuple val(meta), path("${prefix}.*"), emit: fastx
+    tuple val(meta), path("${fastx.name}"), emit: fastx
     path "versions.yml", emit: versions
 
     when:
@@ -24,33 +24,64 @@ process SEQKIT_SHUFFLE_FASTX {
     def args2 = task.ext.args2 ?: ''
     prefix = task.ext.prefix ? "${task.ext.prefix}.${meta.id}" : "${meta.id}"
     def call_gzip = fastx.toString().endsWith('.gz') ? "| gzip -c ${args2}" : ''
-    extension = fastx.toString().endsWith('.gz') ? '.gz' : ''
     def head_cmd = shuffle ? "shuf -n ${subsample_n}" : "head -n ${subsample_n}"
 
+    if (meta.single_end) {
     """
-    seqkit seq --name --only-id ${fastx} \\
-    | ${head_cmd} \\
-    > seq_ids
+        seqkit seq --name --only-id ${fastx} \\
+        | ${head_cmd} \\
+        > seq_ids
     
-    seqkit faidx --region-file seq_ids --full-head ${fastx} \\
-    ${call_gzip} \\
-    > ${prefix}.fastx.${extension}
+        seqkit faidx --region-file seq_ids --full-head ${fastx} \\
+        ${call_gzip} \\
+        > ${fastx.name}
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        seqkit: \$(seqkit version | cut -d' ' -f2)
-    END_VERSIONS
-    """
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            seqkit: \$(seqkit version | cut -d' ' -f2)
+        END_VERSIONS
+        """
+    } else {
+        """
+        seqkit seq --name --only-id ${fastx[0]} \\
+        | ${head_cmd} \\
+        > seq_ids
+    
+        seqkit faidx --region-file seq_ids --full-head ${fastx[0]} \\
+        ${call_gzip} \\
+        > ${fastx[0].name}
 
+        seqkit faidx --region-file seq_ids --full-head ${fastx[1]} \\
+        ${call_gzip} \\
+        > ${fastx[1].name}
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            seqkit: \$(seqkit version | cut -d' ' -f2)
+        END_VERSIONS
+        """
+    }
     stub:
     prefix = task.ext.prefix ? "${task.ext.prefix}.${meta.id}" : "${meta.id}"
-    extension = fastx.toString().endsWith('.gz') ? '.gz' : ''
-    """
-    touch ${prefix}.fastx.${extension}
+    if (meta.single_end) {
+        """
+        touch ${fastx.name}
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        seqkit: \$(seqkit version | cut -d' ' -f2)
-    END_VERSIONS
-    """
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            seqkit: \$(seqkit version | cut -d' ' -f2)
+        END_VERSIONS
+        """
+    } else {
+        """
+        touch ${fastx[0].name}
+        touch ${fastx[1].name}
+
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            seqkit: \$(seqkit version | cut -d' ' -f2)
+        END_VERSIONS
+        """
+
+    }
 }

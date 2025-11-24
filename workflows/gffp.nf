@@ -38,7 +38,7 @@ workflow GFFP {
         .map {
             idx, sample, reads1, reads2, single_end ->
             return [
-                ['id': sample, 'idx': idx, 'single_end': single_end],
+                ['id': sample, 'idx': idx, 'single_end': single_end=='true'],
                 (reads2 == []) ? [file(reads1)] : [file(reads1), file(reads2)],
             ]
         }

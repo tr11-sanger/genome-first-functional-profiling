@@ -15,6 +15,7 @@ include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
 include { BAM2CSV_TOP } from '../modules/local/bam2csv_top/main'
 include { BAM2CSV_GREEDY } from '../modules/local/bam2csv_greedy/main'
+include { SEQKIT_SHUFFLE_FASTX } from '../modules/local/seqkit_shuffle_fastx/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,10 +25,10 @@ include { BAM2CSV_GREEDY } from '../modules/local/bam2csv_greedy/main'
 
 workflow GFFP {
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Parse samplesheet and fetch reads
-    reads_ch = Channel.fromList(
+    reads_ch = channel.fromList(
             samplesheetToList(
                 params.samplesheet, 
                 "${workflow.projectDir}/assets/schema_input.json"
@@ -41,9 +42,14 @@ workflow GFFP {
                 (reads2 == []) ? [file(reads1)] : [file(reads1), file(reads2)],
             ]
         }
+    
+    if (params.reads_subsampling != -1) {
+        SEQKIT_SHUFFLE_FASTX(reads_ch, params.reads_subsampling, true)
+        reads_ch = SEQKIT_SHUFFLE_FASTX.out.fastx
+    }
 
     // Fetch databases
-    db_ch = Channel
+    db_ch = channel
         .from(
             params.databases.collect { k, v ->
                 if (v instanceof Map) {
@@ -61,7 +67,7 @@ workflow GFFP {
                 }
             }.flatten()
         )
-        .filter { it }
+        .filter { it -> it }
 
     FETCHDB(db_ch, "${launchDir}/${params.databases.cache_path}")
     dbs_path_ch = FETCHDB.out.dbs

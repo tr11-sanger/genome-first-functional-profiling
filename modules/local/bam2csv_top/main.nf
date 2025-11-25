@@ -15,7 +15,7 @@ process BAM2CSV_TOP {
 
     script:
     def prefix = task.ext.prefix ? task.ext.prefix : meta.id 
-    def rm_cmd = delete_bam ? "rm -r ${bam}/" : "" 
+    def rm_cmd = delete_bam ? "rm ${bam}" : "" 
     """
     samtools view -@ 1 ${bam} | bam2csv_sqlite_top.py \\
         --genome_cds_filepaths "${genome2cds}" \\

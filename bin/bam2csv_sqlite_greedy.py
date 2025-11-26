@@ -426,6 +426,9 @@ if __name__ == '__main__':
             species_read_counts[s][g].add(q)
         species_read_counts = {k:max([len(vs) for vs in d.values()]) for k,d in species_read_counts.items()}
         
+        if len(species_read_counts)==0:
+            break
+
         top_species = max(species_read_counts.items(), key=lambda x:x[1])[0]
         assigned_species.add(top_species)
         del species_read_counts[top_species]
@@ -730,7 +733,7 @@ if __name__ == '__main__':
                 genome_read_counts[k].add(v)
             genome_read_counts = {k:len(v) for k,v in genome_read_counts.items()}
 
-            if len(genome_read_counts) == 0:
+            if len(genome_read_counts)==0:
                 break
             
             top_genome = max(genome_read_counts.items(), key=lambda x:x[1])[0]

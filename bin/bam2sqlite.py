@@ -119,17 +119,19 @@ if __name__ == '__main__':
     with gzip.open(args.reads1) as f:
         for k,s,q in read_fastq(f, split_header=True):
             if bool(args.remove_paired_suffix):
-                k_ = k[:-2]
+                k_ = k.decode()[:-2]
             else:
-                k_ = k
+                k_ = k.decode()
             read_lengths[k_][0] = len(s)
-    with gzip.open(args.reads2) as f:
-        for k,s,q in read_fastq(f, split_header=True):
-            if bool(args.remove_paired_suffix):
-                k_ = k[:-2]
-            else:
-                k_ = k
-            read_lengths[k_][1] = len(s)
+    if args.reads2 is not None:
+        with gzip.open(args.reads2) as f:
+            for k,s,q in read_fastq(f, split_header=True):
+                if bool(args.remove_paired_suffix):
+                    k_ = k.decode()[:-2]
+                else:
+                    k_ = k.decode()
+                read_lengths[k_][1] = len(s)
+
 
     # Set up database
 

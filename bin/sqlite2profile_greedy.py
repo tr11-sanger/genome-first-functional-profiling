@@ -171,7 +171,7 @@ if __name__ == '__main__':
         for k,t in mappings.items():
             if t[0] is None:
                 continue
-            contig_coverage_depth[reference_list[t[0]]][t[1]:t[2]+1] += 1
+            contig_coverage_depth[t[0]][t[1]:t[2]+1] += 1
         
         sum_len = sum([len(v) for v in contig_coverage_depth.values()])
         if sum_len==0:
@@ -241,7 +241,7 @@ if __name__ == '__main__':
                     
                     if contig not in reference_index:
                         reference_index[contig] = len(reference_list)
-                        reference_list.append(contig)
+                        reference_list[len(reference_list)] = contig
                         db.execute(f'''
                             INSERT INTO reference (name)
                             VALUES ("{contig}");

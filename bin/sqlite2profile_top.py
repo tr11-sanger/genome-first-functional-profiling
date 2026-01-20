@@ -259,7 +259,7 @@ if __name__ == '__main__':
                     
                     if contig not in reference_index:
                         reference_index[contig] = len(reference_list)
-                        reference_list.append(contig)
+                        reference_list[len(reference_list)] = contig
                         db.execute(f'''
                             INSERT INTO reference (name)
                             VALUES ("{contig}");

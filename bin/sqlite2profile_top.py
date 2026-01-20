@@ -172,7 +172,7 @@ if __name__ == '__main__':
                 mappings[q] = (r,rs,re_,a,ani)
             
             for k,t in mappings.items():
-                contig_coverage_depth[reference_list[t[0]]][t[1]:t[2]+1] += 1
+                contig_coverage_depth[t[0]][t[1]:t[2]+1] += 1
             
             sum_len = sum([len(v) for v in contig_coverage_depth.values()])
             if sum_len==0:

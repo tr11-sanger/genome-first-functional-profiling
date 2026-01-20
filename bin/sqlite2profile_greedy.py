@@ -477,7 +477,7 @@ if __name__ == '__main__':
         
         for k,ts in mappings.items():
             t = max(ts, key=lambda x:x[-2])
-            contig_coverage_depth[reference_list[t[0]]][t[1]:t[2]] += 1
+            contig_coverage_depth[t[0]][t[1]:t[2]] += 1
         
         sum_len = sum([len(v) for v in contig_coverage_depth.values()])
         if sum_len==0:

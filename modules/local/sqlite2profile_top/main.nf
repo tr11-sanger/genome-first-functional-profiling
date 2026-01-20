@@ -19,7 +19,6 @@ process SQLITE2PROFILE_TOP {
         --sqlite "${sqlite}" \\
         --genome_cds_filepaths "${genome2cds}" \\
         --output_prefix "${prefix}" \\
-        --min_ani "${params.min_ani}" \\
         --min_coverage_ratio "${params.min_coverage_ratio}" \\
         --output_dir output
     """

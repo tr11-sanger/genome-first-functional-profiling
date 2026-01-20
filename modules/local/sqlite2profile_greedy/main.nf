@@ -19,7 +19,6 @@ process SQLITE2PROFILE_GREEDY {
         --sqlite "${sqlite}" \\
         --genome_cds_filepaths "${genome2cds}" \\
         --output_prefix "${prefix}" \\
-        --min_ani "${params.min_ani}" \\
         --output_dir output
     """
 

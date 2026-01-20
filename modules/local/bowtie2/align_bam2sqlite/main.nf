@@ -44,7 +44,7 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
     bowtie2 \\
         -x \$INDEX \\
         $reads_args \\
-        --threads $task.cpus \\
+        --threads ${task.cpus>1 ? task.cpus-1 : task.cpus} \\
         $args \\
         2>| >(tee ${prefix}.bowtie2.log >&2) \\
     | bam2sqlite.py \\

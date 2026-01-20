@@ -324,6 +324,8 @@ if __name__ == '__main__':
         global contig2genome
         global genome2species
 
+        if read[0]=='@':
+            return
         read_ = read.split('\t')
         flags_int = int(read_[1])
         unmapped = bool(flags_int & 4)

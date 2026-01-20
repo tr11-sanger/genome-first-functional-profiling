@@ -34,7 +34,7 @@ parser.add_argument('-o', "--out_fp", type=str,
 parser.add_argument('-a', "--min_ani", type=float,
                     default=0.95,
                     help="Minimum ANI for read mapping.")
-parser.add_argument('-r', "--remove_paired_suffix", type=int,
+parser.add_argument('-x', "--remove_paired_suffix", type=int,
                     default=1,
                     help="Remove paired suffix of reads (0=No, 1=Yes).")
 args = parser.parse_args()

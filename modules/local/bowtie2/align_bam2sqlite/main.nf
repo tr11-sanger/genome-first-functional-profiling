@@ -47,7 +47,7 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
         --threads $task.cpus \\
         $args \\
         2>| >(tee ${prefix}.bowtie2.log >&2) \\
-    | align_bam2sqlite.py \\
+    | bam2sqlite.py \\
         --reads1 "${reads[0]}" \\
         ${reads2_arg} \\
         --genome_contig_mapping "${genome_contigs}" \\

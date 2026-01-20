@@ -414,8 +414,8 @@ if __name__ == '__main__':
             genome_index[genome] = len(genome_list)
             genome_list.append(genome)
             db.execute(f'''
-                INSERT INTO genome (idx, name, species) 
-                VALUES ({genome_index[genome]}, "{genome}", {species_index[species]});
+                INSERT INTO genome (idx, name) 
+                VALUES ({genome_index[genome]}, "{genome}");
             ''')
             transaction_count += 1
             if transaction_count%commit_n == 0:

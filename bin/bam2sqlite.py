@@ -439,7 +439,7 @@ if __name__ == '__main__':
             ) 
             VALUES (
                 {species_index[species]}, {genome_index[genome]}, {query_index[(query,read2)]}, {reference_index[reference]}, 
-                {rstart}, {rend}, {align_score}, {ani}, {ani_gapped}, {ani_gapped_fullread}
+                {rstart}, {rend}, {ani}, {ani_gapped}, {ani_gapped_fullread}
             );
         ''')
         transaction_count += 1

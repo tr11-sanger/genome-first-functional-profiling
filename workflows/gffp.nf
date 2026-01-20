@@ -144,12 +144,12 @@ workflow GFFP {
             [meta, sqlite, file(params.genome2cds)] 
         }
     if (params.greedy_profile) {
-        SQLITE2PROFILE_GREEDY(profile_ch, params.delete_bam)
+        SQLITE2PROFILE_GREEDY(profile_ch)
         // taxonomic_profile = SQLITE2PROFILE_GREEDY.out.species_profile
         // functional_profile = SQLITE2PROFILE_GREEDY.out.species_cds_profile
     }
     if (params.top_profile) {
-        SQLITE2PROFILE_TOP(profile_ch, params.delete_bam)
+        SQLITE2PROFILE_TOP(profile_ch)
         // taxonomic_profile = SQLITE2PROFILE_TOP.out.species_profile
         // functional_profile = SQLITE2PROFILE_TOP.out.species_cds_profile
     }

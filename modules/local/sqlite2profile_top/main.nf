@@ -6,7 +6,6 @@ process SQLITE2PROFILE_TOP {
 
     input:
     tuple val(meta), path(sqlite), path(genome2cds)
-    val delete_bam
 
     output:
     tuple val(meta), path("output/*species_coverage.tsv.gz"), emit: species_profile

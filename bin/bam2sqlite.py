@@ -34,6 +34,9 @@ parser.add_argument('-o', "--out_fp", type=str,
 parser.add_argument('-a', "--min_ani", type=float,
                     default=0.95,
                     help="Minimum ANI for read mapping.")
+parser.add_argument('-r', "--remove_paired_suffix", type=int,
+                    default=1,
+                    help="Remove paired suffix of reads (0=No, 1=Yes).")
 args = parser.parse_args()
 
 def clean_name(s):
@@ -115,10 +118,18 @@ if __name__ == '__main__':
     read_lengths = defaultdict(dict)
     with gzip.open(args.reads1) as f:
         for k,s,q in read_fastq(f, split_header=True):
-            read_lengths[k][0] = len(s)
+            if args.remove_paired_suffix:
+                k_ = k[:-2]
+            else:
+                k_ = k
+            read_lengths[k_][0] = len(s)
     with gzip.open(args.reads2) as f:
         for k,s,q in read_fastq(f, split_header=True):
-            read_lengths[k][1] = len(s)
+            if args.remove_paired_suffix:
+                k_ = k[:-2]
+            else:
+                k_ = k
+            read_lengths[k_][1] = len(s)
 
     # Set up database
 
@@ -444,12 +455,12 @@ if __name__ == '__main__':
 
         if len(reads)>=read_batch_n:
             for read in reads:
-                parse_sam_line(read)
+                parse_sam_line(read, args.remove_paired_suffix)
             reads = []
         
     else:
         for read in reads:
-            parse_sam_line(read)
+            parse_sam_line(read, args.remove_paired_suffix)
         db.commit()
         del reads
 

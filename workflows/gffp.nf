@@ -12,9 +12,9 @@ include { SOURMASH_GATHER } from '../modules/nf-core/sourmash/gather/main'
 include { SOURMASH_SKETCH } from '../modules/nf-core/sourmash/sketch/main'
 include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
-include { BOWTIE2_ALIGN } from '../modules/nf-core/bowtie2/align/main'
-include { BAM2CSV_TOP } from '../modules/local/bam2csv_top/main'
-include { BAM2CSV_GREEDY } from '../modules/local/bam2csv_greedy/main'
+include { BOWTIE2_ALIGN_BAM2SQLITE } from '../modules/local/bowtie2/align_bam2sqlite/main'
+include { SQLITE2PROFILE_TOP } from '../modules/local/sqlite2profile_top/main'
+include { SQLITE2PROFILE_GREEDY } from '../modules/local/sqlite2profile_greedy/main'
 include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
 
 /*
@@ -117,41 +117,49 @@ workflow GFFP {
 
     BOWTIE2_BUILD(genomes_ch)
 
+    contigs_ch = SOURMASH2FASTA.out.contigs
+        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
     align_in_ch = reads_ch
         .join(BOWTIE2_BUILD.out.index, remainder: true)
         .filter { _meta, _reads, index -> index }
+        .join(contigs_ch)
         .join(genomes_ch)
-        .multiMap{ meta, reads, index, fasta -> 
+        .multiMap{ meta, reads, index, genome_contigs, fasta -> 
             reads: [meta, reads]
             index: [meta, index]
             fasta: [meta, fasta]
+            genome_contigs: [meta, genome_contigs]
+            genome_species: [meta, file(params.genome_species)]
         }
-    BOWTIE2_ALIGN(align_in_ch.reads, align_in_ch.index, align_in_ch.fasta, false, false)
+    BOWTIE2_ALIGN_BAM2SQLITE(
+        align_in_ch.reads, 
+        align_in_ch.index, 
+        align_in_ch.fasta, 
+        align_in_ch.genome_contigs, 
+        align_in_ch.genome_species, 
+    )
 
-    contigs_ch = SOURMASH2FASTA.out.contigs
-        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
-    profile_ch = BOWTIE2_ALIGN.out.bam
-        .join(contigs_ch)
-        .join(genomes_ch)    
-        .map { meta, bam, genome_contigs, refs -> 
-            [meta, bam, file(params.genome2cds), genome_contigs, file(params.genome_species), refs] 
+    profile_ch = BOWTIE2_ALIGN_BAM2SQLITE.out.sqlite
+        .map { meta, sqlite -> 
+            [meta, sqlite, file(params.genome2cds)] 
         }
-    if (params.greedy_read_reassignment) {
-        BAM2CSV_GREEDY(profile_ch, params.delete_bam)
-        taxonomic_profile = BAM2CSV_GREEDY.out.species_profile
-        functional_profile = BAM2CSV_GREEDY.out.species_cds_profile
-    } else {
-        BAM2CSV_TOP(profile_ch, params.delete_bam)
-        taxonomic_profile = BAM2CSV_TOP.out.species_profile
-        functional_profile = BAM2CSV_TOP.out.species_cds_profile
+    if (params.greedy_profile) {
+        SQLITE2PROFILE_GREEDY(profile_ch, params.delete_bam)
+        // taxonomic_profile = SQLITE2PROFILE_GREEDY.out.species_profile
+        // functional_profile = SQLITE2PROFILE_GREEDY.out.species_cds_profile
+    }
+    if (params.top_profile) {
+        SQLITE2PROFILE_TOP(profile_ch, params.delete_bam)
+        // taxonomic_profile = SQLITE2PROFILE_TOP.out.species_profile
+        // functional_profile = SQLITE2PROFILE_TOP.out.species_cds_profile
     }
 
     emit:
-    sylph_profile = SYLPH_PROFILE.out.profile_out
-    sylph_query = SYLPH_QUERY.out.profile_out
-    sourmash_profile = SOURMASH_GATHER.out.result
-    taxonomic_profile = taxonomic_profile
-    functional_profile = functional_profile
+    // sylph_profile = SYLPH_PROFILE.out.profile_out
+    // sylph_query = SYLPH_QUERY.out.profile_out
+    // sourmash_profile = SOURMASH_GATHER.out.result
+    // taxonomic_profile = taxonomic_profile
+    // functional_profile = functional_profile
     versions = ch_versions                         // channel: [ path(versions.yml) ]
 }
 

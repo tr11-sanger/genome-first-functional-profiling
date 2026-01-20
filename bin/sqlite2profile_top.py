@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
     commit_n = 100_000
     query_batch_n = 100_000
+    transaction_count = 0
 
 
     # load data
@@ -227,8 +228,6 @@ if __name__ == '__main__':
     cluster_list = []
     cluster_index = {}
     species_cds_mappings = {}
-    transaction_count = 0
-    commit_n = 100_000
     for species, genomes in species_genomes.items():
         
         for genome in genomes:

@@ -38,7 +38,6 @@ if __name__ == '__main__':
             if i*n<len(l):
                 yield l[i*n:(i+1)*n]
 
-    commit_n = 100_000
     query_batch_n = 100_000
 
 

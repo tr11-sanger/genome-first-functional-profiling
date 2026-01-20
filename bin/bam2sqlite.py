@@ -109,7 +109,7 @@ if __name__ == '__main__':
             k,v = [v.strip() for v in l.split('\t')]
             genome2species[k] = v
 
-    contig_lengths = {k:len(v) for k,v in read_fasta(args.refs, split_header=True).items()}
+    contig_lengths = {k:len(v) for k,v in read_fasta(args.refs, split_header=True)}
 
     read_lengths = defaultdict(dict)
     with gzip.open(args.reads1) as f:

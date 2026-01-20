@@ -118,14 +118,14 @@ if __name__ == '__main__':
     read_lengths = defaultdict(dict)
     with gzip.open(args.reads1) as f:
         for k,s,q in read_fastq(f, split_header=True):
-            if args.remove_paired_suffix:
+            if bool(args.remove_paired_suffix):
                 k_ = k[:-2]
             else:
                 k_ = k
             read_lengths[k_][0] = len(s)
     with gzip.open(args.reads2) as f:
         for k,s,q in read_fastq(f, split_header=True):
-            if args.remove_paired_suffix:
+            if bool(args.remove_paired_suffix):
                 k_ = k[:-2]
             else:
                 k_ = k
@@ -311,7 +311,6 @@ if __name__ == '__main__':
     transaction_count = 0
 
     commit_n = 100_000
-    read_batch_n = 10_000_000
     query_batch_n = 100_000
     nm_suffix = 'nm:i:'
     as_suffix = 'as:i:'
@@ -446,23 +445,12 @@ if __name__ == '__main__':
         if transaction_count%commit_n == 0:
             db.commit()
 
-    reads = []
     for i,read in enumerate(sys.stdin):
-        if i%3_000_000==0:
-            print("Reading BAM:", datetime.datetime.now(), i, flush=True)
-            
-        reads.append(read)
-
-        if len(reads)>=read_batch_n:
-            for read in reads:
-                parse_sam_line(read, args.remove_paired_suffix)
-            reads = []
-        
+        if i%1_000_000==0:
+            print("Reading mappings:", datetime.datetime.now(), i, flush=True)
+        parse_sam_line(read, False)  # bool(args.remove_paired_suffix)
     else:
-        for read in reads:
-            parse_sam_line(read, args.remove_paired_suffix)
         db.commit()
-        del reads
 
     n_queries = len(query_index)
     query_index = None

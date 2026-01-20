@@ -68,7 +68,6 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
     stub:
     def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
-    }
 
     """
     touch ${prefix}.bowtie2.log
@@ -80,5 +79,4 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
         pigz: \$( pigz --version 2>&1 | sed 's/pigz //g' )
     END_VERSIONS
     """
-
 }

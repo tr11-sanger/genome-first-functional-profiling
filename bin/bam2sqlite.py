@@ -193,7 +193,7 @@ if __name__ == '__main__':
             rend INTEGER, 
             ani REAL,
             ani_gapped REAL,
-            ani_gapped_fulllength REAL
+            ani_gapped_fullread REAL
         );
     ''')
     db.commit()
@@ -216,7 +216,7 @@ if __name__ == '__main__':
             proportion_l REAL,
             ani REAL,
             ani_gapped REAL,
-            ani_gapped_fulllength REAL
+            ani_gapped_fullread REAL
         );
     ''')
     db.commit()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
             proportion_l REAL,
             ani REAL,
             ani_gapped REAL,
-            ani_gapped_fulllength REAL
+            ani_gapped_fullread REAL
         );
     ''')
     db.commit()
@@ -255,7 +255,7 @@ if __name__ == '__main__':
             rend INTEGER, 
             ani REAL,
             ani_gapped REAL,
-            ani_gapped_fulllength REAL
+            ani_gapped_fullread REAL
         );
     ''')
     db.commit()

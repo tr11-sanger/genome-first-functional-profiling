@@ -147,20 +147,29 @@ if __name__ == '__main__':
     while not all_assigned:
         # get top read match per genome
         print('Trimming mappings to top match per genome:', datetime.datetime.now(), flush=True)
-        cur = db.cursor()
-        cur.execute(f'''
-            SELECT idx,query,species
-            FROM species_genome_read_mappings
-            GROUP BY query, genome
-            HAVING ROWID = MIN(ROWID)
-            ORDER BY ani_gapped_fullread DESC;'''
-        )
+
+        def gen_top_matches():
+            cur = db.cursor()
+            cur.execute(f'''
+                SELECT idx,query,genome,species,ani_gapped_fullread
+                FROM species_genome_read_mappings
+                ORDER BY query,genome,ani_gapped_fullread DESC;
+            ''')
+
+            current_qi = None
+            current_gi = None
+            for mi,qi,gi,si,ani in cur:
+                if (gi != current_gi) or (qi != current_qi):
+                    yield mi,qi,si
+                    
+                current_gi = gi
+                current_qi = qi
 
         # identify mappings that map to the top species
         print('Trimming mappings to only match to top species:', datetime.datetime.now(), flush=True)
         assigned_species = np.ones(n_queries, dtype=int) * -1
         good_mappings = []
-        for i,q,s in cur:
+        for i,q,s in gen_top_matches():
             if assigned_species[q]==-1:
                 assigned_species[q] = s
                 good_mappings.append(i)
@@ -198,7 +207,7 @@ if __name__ == '__main__':
             cur.execute(f'SELECT query,reference,rstart,rend,ani,ani_gapped_fullread FROM top_species_genome_read_mappings WHERE genome={genome};')
             mappings = {}
             for q,r,rs,re_,a,ani in cur:
-                [q] = (r,rs,re_,a,ani)
+                mappings[q] = (r,rs,re_,a,ani)
             
             for k,t in mappings.items():
                 contig_coverage_depth[t[0]][t[1]:t[2]+1] += 1
@@ -224,12 +233,21 @@ if __name__ == '__main__':
         mappings = None
         contig_coverage_depth = None
             
+        # species read counts
+        cur = db.cursor()
+        cur.execute(f'SELECT ma.species, qu.idx, qu.name FROM top_species_genome_read_mappings as ma LEFT JOIN query as qu ON ma.query=qu.idx;')
+        mapped_reads = defaultdict(set)
+        mapped_read_ends = defaultdict(set)
+        for s,qi,qn in cur:
+            mapped_read_ends[s].add(qi)
+            mapped_reads[s].add(qn)
+         
         species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1][1] for k,d in species_genomes_coverage.items()}
+        species_top_genome_coverage = {k:v[:-1]+(len(mapped_read_ends[k]),len(mapped_reads[k])) for k,v in species_top_genome_coverage.items()}
 
         # remove all species that fail min coverage ratio test
         present_species = {str(k) for k,(d,b,e,r,n,n_) in species_top_genome_coverage.items() if r>=args.min_coverage_ratio}
     
-
         if len(present_species) < len(species_top_genome_coverage):
             print(f'Removing {len(species_top_genome_coverage) - len(present_species)} species that are below coverage threshold:', datetime.datetime.now(), flush=True)
             # delete mappings not in present species
@@ -244,6 +262,8 @@ if __name__ == '__main__':
     # genome coverage
     genomes_coverage = {k:v for _,d in species_genomes_coverage.items() for k,v in d.items()}
 
+    print(f'Writing outputs', datetime.datetime.now(), flush=True)
+
     # Outputs
     prefix = f"{args.output_prefix}_" if len(args.output_prefix)>0 else ""
     out_dir = Path(args.output_dir)
@@ -255,3 +275,5 @@ if __name__ == '__main__':
     with gzip.open(out_dir / f"{prefix}genome_coverage.tsv.gz", 'wt') as f:
         for genome,(d,b,e,r,n1,n2) in genomes_coverage.items():
             f.write(f'{genome_list[genome]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
+
+    print(f'Complete', datetime.datetime.now(), flush=True)

@@ -179,7 +179,17 @@ if __name__ == '__main__':
     mappings = None
     contig_coverage_depth = None
         
-    species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1] for k,d in species_genomes_coverage.items()}
+    # species read counts
+    cur = db.cursor()
+    cur.execute(f'SELECT ma.species, qu.idx, qu.name FROM species_genome_read_mappings as ma LEFT JOIN query as qu ON ma.query=qu.idx;')
+    mapped_reads = defaultdict(set)
+    mapped_read_ends = defaultdict(set)
+    for s,qi,qn in cur:
+        mapped_read_ends[s].add(qi)
+        mapped_reads[s].add(qn)
+     
+    species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1][1] for k,d in species_genomes_coverage.items()}
+    species_top_genome_coverage = {k:v[:-1]+(len(mapped_read_ends[k]),len(mapped_reads[k])) for k,v in species_top_genome_coverage.items()}
 
 
     # Genome profile
@@ -275,14 +285,18 @@ if __name__ == '__main__':
     mappings = None
 
 
+    print(f'Writing outputs', datetime.datetime.now(), flush=True)
+
     # Outputs
     prefix = f"{args.output_prefix}_" if len(args.output_prefix)>0 else ""
     out_dir = Path(args.output_dir)
     os.makedirs(out_dir, exist_ok=True)
 
     with gzip.open(out_dir / f"{prefix}species_coverage.tsv.gz", 'wt') as f:
-        for species,(genome,(d,b,e,r,n1,n2)) in species_top_genome_coverage.items():
+        for species,(d,b,e,r,n1,n2) in species_top_genome_coverage.items():
             f.write(f'{species_list[species]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
     with gzip.open(out_dir / f"{prefix}genome_coverage.tsv.gz", 'wt') as f:
         for genome,(d,b,e,r,n1,n2) in genomes_coverage.items():
             f.write(f'{genome_list[genome]}\t{d}\t{b}\t{e}\t{r}\t{n1}\t{n2}\n')
+
+    print(f'Complete', datetime.datetime.now(), flush=True)

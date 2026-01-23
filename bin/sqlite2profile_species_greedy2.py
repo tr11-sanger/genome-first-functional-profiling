@@ -16,15 +16,9 @@ parser = argparse.ArgumentParser(description='Read SQLite database containing re
 parser.add_argument('-s', "--sqlite", type=str,
                     required=True,
                     help="SQLite database path (GZiped) containing read mapping data.")
-parser.add_argument('-c', "--genome_cds_filepaths", type=str,
-                    required=True,
-                    help="File containing list of filepaths for genome to CDS mapping TSV files.")
 parser.add_argument('-o', "--output_dir", type=str,
                     required=True,
                     help="Output directory.")
-parser.add_argument('-d', "--loc_index_denom", type=int,
-                    default=100,
-                    help="Denominator for indexing CDS location.")
 parser.add_argument('-p', "--output_prefix", type=str,
                     default='',
                     help="Output prefix.")
@@ -40,15 +34,6 @@ if __name__ == '__main__':
 
     query_batch_n = 100_000
     transaction_count = 0
-
-
-    # load data
-
-    genome2cds_fp = {}
-    with open(args.genome_cds_filepaths, 'rt') as f:
-        for i,l in enumerate(f):
-            k, v = [v.strip() for v in l.split('\t')]
-            genome2cds_fp[k] = v
 
 
     # load sqlite

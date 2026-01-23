@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
     # Set up database
 
-    db_path = ':memory:'  # 
+    db_path = args.out_fp  # ':memory:'
     db = sqlite3.connect(db_path)
 
     db.execute('''
@@ -260,6 +260,7 @@ if __name__ == '__main__':
     ''')
     db.commit()
 
+
     # Read BAM
 
     def parse_cigar(cigar_str):
@@ -312,7 +313,7 @@ if __name__ == '__main__':
 
     transaction_count = 0
 
-    commit_n = 100_000
+    commit_n = 1_000_000
     query_batch_n = 100_000
     nm_suffix = 'nm:i:'
     as_suffix = 'as:i:'
@@ -329,7 +330,6 @@ if __name__ == '__main__':
         global species_index
         global transaction_count
         global commit_n
-        global read_batch_n
         global query_batch_n
         global nm_suffix
         global as_suffix
@@ -457,6 +457,7 @@ if __name__ == '__main__':
     n_queries = len(query_index)
     query_index = None
 
+
     # Add database indexes
 
     db.execute('CREATE INDEX query_name_idx ON query (name);')
@@ -485,19 +486,11 @@ if __name__ == '__main__':
     db.execute('CREATE INDEX top_species_idx ON top_species_genome_read_mappings (species);')
     db.execute('CREATE INDEX top_genome_idx ON top_species_genome_read_mappings (genome);')
 
-
-    backup_db_path = args.out_fp
-
-    # save ungzipped
-    backup_db = sqlite3.connect(backup_db_path)
-    with backup_db:
-        db.backup(backup_db)
-    backup_db.close()
+    db.commit()
+    db.close()
 
     # gzip
-    subprocess.call(f"gzip -c {backup_db_path} > {backup_db_path}.gz", shell=True)
+    subprocess.call(f"gzip -c {db_path} > {db_path}.gz", shell=True)
 
     # delete ungzipped
-    os.remove(backup_db_path)
-
-    db.close()
+    os.remove(db_path)

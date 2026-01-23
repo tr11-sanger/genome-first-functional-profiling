@@ -242,9 +242,11 @@ if __name__ == '__main__':
         for s,qi,qn in cur:
             mapped_read_ends[s].add(qi)
             mapped_reads[s].add(qn)
+        mapped_reads = {k:len(v) for k,v in mapped_reads.items()}
+        mapped_read_ends = {k:len(v) for k,v in mapped_read_ends.items()}
          
         species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1][1] for k,d in species_genomes_coverage.items()}
-        species_top_genome_coverage = {k:v[:-2]+(len(mapped_read_ends[k]),len(mapped_reads[k])) for k,v in species_top_genome_coverage.items()}
+        species_top_genome_coverage = {k:v[:-2]+(mapped_read_ends[k],mapped_reads[k]) for k,v in species_top_genome_coverage.items()}
 
         # remove bottom species, or all species that fail
         present_species = {str(k) for k,(d,b,e,r,n,n_) in species_top_genome_coverage.items() if r>=args.min_coverage_ratio}

@@ -220,7 +220,7 @@ if __name__ == '__main__':
         mapped_reads[s].add(qn)
      
     species_top_genome_coverage = {k:sorted(d.items(), key=lambda x:x[1][1])[-1][1] for k,d in species_genomes_coverage.items()}
-    species_top_genome_coverage = {k:v[:-1]+(len(mapped_read_ends[k]),len(mapped_reads[k])) for k,v in species_top_genome_coverage.items()}
+    species_top_genome_coverage = {k:v[:-2]+(len(mapped_read_ends[k]),len(mapped_reads[k])) for k,v in species_top_genome_coverage.items()}
 
 
     # Genome profile

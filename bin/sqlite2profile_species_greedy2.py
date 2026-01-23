@@ -190,7 +190,7 @@ if __name__ == '__main__':
     for species, genome in cur:
         print('Calculating species coverage:', datetime.datetime.now(), species_list[species], flush=True)
         
-        contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome]}
+        contig_coverage_depth = {v: np.zeros(contig_lengths[v], dtype=int) for v in genome2contigs[genome]}
         
         cur = db.cursor()
         cur.execute(f'SELECT query,reference,rstart,rend,ani,ani_gapped_fullread FROM species_genome_read_mappings WHERE genome={genome};')
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     for species,genome in species_genome:
         print('Calculating genome coverage:', datetime.datetime.now(), species_list[species], genome_list[genome], flush=True)
         
-        contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome]}
+        contig_coverage_depth = {v: np.zeros(contig_lengths[v], dtype=int) for v in genome2contigs[genome]}
         
         cur = db.cursor()
         cur.execute(f'SELECT query,reference,rstart,rend,ani,ani_gapped_fullread FROM species_genome_read_mappings WHERE genome={genome};')

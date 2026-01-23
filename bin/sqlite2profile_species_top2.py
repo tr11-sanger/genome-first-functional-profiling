@@ -150,7 +150,7 @@ if __name__ == '__main__':
             remove_unpaired_from_db(current_qn, paired_mappings, force_commit=False)
             paired_mappings = defaultdict(lambda :defaultdict(set))
             current_qn = qn
-        paired_mappings[qp][s].add(m)
+        paired_mappings[qp][r].add(m)
     else:
         remove_unpaired_from_db(current_qn, paired_mappings, force_commit=True)
         del paired_mappings
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         for species,genome in species_genome:
             print('Calculating species coverage:', datetime.datetime.now(), species_list[species], genome_list[genome], flush=True)
             
-            contig_coverage_depth = {v: np.zeros(contig_lengths[v]) for v in genome2contigs[genome]}
+            contig_coverage_depth = {v: np.zeros(contig_lengths[v], dtype=int) for v in genome2contigs[genome]}
             
             cur = db.cursor()
             cur.execute(f'SELECT query,reference,rstart,rend,ani,ani_gapped_fullread FROM top_species_genome_read_mappings WHERE genome={genome};')

@@ -231,6 +231,7 @@ if __name__ == '__main__':
             species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     
         mappings = None
+        mapped_read_pairs = None
         contig_coverage_depth = None
             
         # species read counts

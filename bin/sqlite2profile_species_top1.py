@@ -221,9 +221,17 @@ if __name__ == '__main__':
             mean_depth_ = genome_coverage_depth if genome_coverage_depth<700 else 700
             genome_expected_breadth = 1 - (1/(np.log2(1+np.exp(mean_depth_))))  # * np.log(1+np.exp(0))))
 
-            species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings))
+            mapped_read_pairs = set()
+            for mappings_ in batch(list(mappings), query_batch_n):
+                cur = db.cursor()
+                cur.execute(f'SELECT name FROM query WHERE idx IN ({",".join([str(v) for v in mappings_])});')
+                mapped_read_pairs.update({v for v, in cur})
+            mapped_read_pairs = len(mapped_read_pairs)
+
+            species_genomes_coverage[species][genome] = (float(genome_coverage_depth), float(genome_coverage_breadth), float(genome_expected_breadth), float(genome_coverage_breadth/genome_expected_breadth), len(mappings), mapped_read_pairs)
     
         mappings = None
+        mapped_read_pairs = None
         contig_coverage_depth = None
 
         # species read counts

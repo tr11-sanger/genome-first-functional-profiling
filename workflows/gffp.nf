@@ -90,7 +90,7 @@ workflow GFFP {
         )
         ch_versions = ch_versions.mix(FASTP.out.versions_fastp)
         reads_ch = FASTP.out.reads
-        qc_stats = FASTP.out.fastp_json
+        qc_stats = FASTP.out.json
     } else {
         qc_stats = channel.empty()
     }

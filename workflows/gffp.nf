@@ -83,7 +83,6 @@ workflow GFFP {
     if (!params.skip_qc) {
         FASTP(
             reads_ch,
-            [],
             false,
             false,
             false,

@@ -106,6 +106,7 @@ workflow GFFP {
         }
         .first()
     genomes_ch = channel.empty()
+    contigs_ch = channel.empty()
     if (params.sourmash_genome_selector) {
         sourmash_db = dbs.genome_catalogue
             .map { meta, fp ->
@@ -125,9 +126,13 @@ workflow GFFP {
             genome_fp_lookup_table
         )
     
-        // filter out if no genomes
+        // filter out if no genomes/contigs
         genomes_ch = genomes_ch.mix(
             SOURMASH2FASTA.out.fasta
+                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+        )
+        contigs_ch = contigs_ch.mix(
+            SOURMASH2FASTA.out.contigs
                 .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
         )
     }
@@ -137,16 +142,19 @@ workflow GFFP {
             genome_fp_lookup_table
         )
 
+        // filter out if no genomes/contigs
         genomes_ch = genomes_ch.mix(
             SYLPH2FASTA.out.fasta
+                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+        )
+        contigs_ch = contigs_ch.mix(
+            SYLPH2FASTA.out.contigs
                 .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
         )
     }
 
     BOWTIE2_BUILD(genomes_ch)
 
-    contigs_ch = SOURMASH2FASTA.out.contigs
-        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
     align_in_ch = reads_ch
         .join(BOWTIE2_BUILD.out.index, remainder: true)
         .filter { _meta, _reads, index -> index }

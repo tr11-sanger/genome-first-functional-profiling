@@ -21,7 +21,7 @@ process SYLPH2FASTA {
     def args = task.ext.args ?: ''
     """
     # gunzip -c $sylph_results | cut -d"," -f10 | tail -n +2 | sort > data.tmp
-    sourmash2fasta.py -s $sylph_results -o data.tmp
+    sylph2fasta.py -s $sylph_results -o data.tmp
     cat data.tmp | sort > data.tmp2
     join -t',' -1 1 -2 1 -o 2.1,2.2 data.tmp2 $lookup > genomes_table.csv
     rm data.tmp

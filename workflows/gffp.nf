@@ -87,7 +87,7 @@ workflow GFFP {
             false,
             false,
         )
-        ch_versions = ch_versions.mix(FASTP.out.versions)
+        ch_versions = ch_versions.mix(FASTP.out.versions_fastp)
         reads_ch = FASTP.out.reads
     }
 

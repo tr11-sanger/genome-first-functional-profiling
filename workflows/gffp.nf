@@ -82,7 +82,7 @@ workflow GFFP {
     
     if (!params.skip_qc) {
         FASTP(
-            reads_ch,
+            reads_ch.map{ meta, reads -> [meta, reads, []]},
             false,
             false,
             false,

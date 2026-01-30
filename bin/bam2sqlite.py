@@ -39,6 +39,7 @@ parser.add_argument('-x', "--remove_paired_suffix", type=int,
                     help="Remove paired suffix of reads (0=No, 1=Yes).")
 args = parser.parse_args()
 
+
 def clean_name(s):
     s_ = str(s)
     prefixes = ['GB_', 'GA_', 'RS_']
@@ -89,55 +90,12 @@ def read_fastq(filehandle, target_seqs=None, split_header=False):
                 if (target_seqs is None) or ((target_seqs is not None) and (header in target_seqs)):
                     yield header, seq, q
 
-def batch(l, n):
-    for i in range((len(l)//n)+1):
-        if i*n<len(l):
-            yield l[i*n:(i+1)*n]
-
 
 if __name__ == '__main__':
-    # load data
-
-    genome2contigs = defaultdict(set)
-    with open(args.genome_contig_mapping, 'rt') as f:
-        for l in f:
-            a,b = [v.strip() for v in l.split(',')]
-            genome2contigs[clean_name(a)].add(b)
-    contig2genome = {v:k for k,vs in genome2contigs.items() for v in vs}
-    genome2contigs = dict(genome2contigs)
-
-    genome2species = {}
-    with open(args.genome_species, 'rt') as f:
-        for l in f:
-            k,v = [v.strip() for v in l.split('\t')]
-            genome2species[k] = v
-
-    with open(args.refs, 'rt') as f:
-        contig_lengths = {k:len(v) for k,v in read_fasta(f, split_header=True)}
-
-    read_lengths = defaultdict(dict)
-    with gzip.open(args.reads1) as f:
-        for k,s,q in read_fastq(f, split_header=True):
-            if bool(args.remove_paired_suffix):
-                k_ = k.decode()[:-2]
-            else:
-                k_ = k.decode()
-            read_lengths[k_][0] = len(s)
-    if args.reads2 is not None:
-        with gzip.open(args.reads2) as f:
-            for k,s,q in read_fastq(f, split_header=True):
-                if bool(args.remove_paired_suffix):
-                    k_ = k.decode()[:-2]
-                else:
-                    k_ = k.decode()
-                read_lengths[k_][1] = len(s)
-
-
     # Set up database
-
     db_path = args.out_fp  # ':memory:'
     db = sqlite3.connect(db_path)
-
+    
     db.execute('''
         CREATE TABLE species (
             idx INTEGER PRIMARY KEY,
@@ -145,15 +103,16 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE genome (
             idx INTEGER PRIMARY KEY,
-            name TEXT
+            name TEXT,
+            species INTEGER
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE query (
             idx INTEGER PRIMARY KEY,
@@ -163,7 +122,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE reference (
             idx INTEGER PRIMARY KEY,
@@ -173,7 +132,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE cluster (
             idx INTEGER PRIMARY KEY,
@@ -181,7 +140,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE species_genome_read_mappings (
             idx INTEGER PRIMARY KEY,
@@ -197,7 +156,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE cds_read_mappings (
             idx INTEGER PRIMARY KEY,
@@ -220,7 +179,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE species_cds_read_mappings (
             idx INTEGER PRIMARY KEY,
@@ -243,7 +202,7 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
-
+    
     db.execute('''
         CREATE TABLE top_species_genome_read_mappings (
             idx INTEGER PRIMARY KEY,
@@ -259,10 +218,148 @@ if __name__ == '__main__':
         );
     ''')
     db.commit()
+    
+    
+    transaction_count = 0
+    
+    commit_n = 1_000_000
+    query_batch_n = 100_000
+    
+    
+    # load data
+    
+    # Read species and genomes
+    genome2species = {}
+    with open(args.genome_species, 'rt') as f:
+        for l in f:
+            k,v = [v.strip() for v in l.split('\t')]
+            genome2species[k] = v
 
+    genome_index = {}
+    genome_count = 0
+    contig2genome = {}
+    species_index = {}
+    species_count = 0
+    
+    def add_genome_to_db(genome, db):
+        global genome_count
+        global genome_index
+        global species_count
+        global species_index
+        global transaction_count
+        global commit_n
+    
+        species = genome2species[genome]
+        if not species in species_index:
+            species_index[species] = int(species_count)
+            species_count += 1
+            db.execute(f'''
+                INSERT INTO species (idx, name) 
+                VALUES ({species_index[species]}, "{species}");
+            ''')
+            transaction_count += 1
+            if transaction_count%commit_n == 0:
+                db.commit()
 
-    # Read BAM
+        genome_index[genome] = int(genome_count)
+        genome_count += 1
+        db.execute(f'''
+            INSERT INTO genome (idx, name, species) 
+            VALUES ({genome_index[genome]}, "{genome}", {species_index[species]});
+        ''')
+        transaction_count += 1
+        if transaction_count%commit_n == 0:
+            db.commit()
+    
+    with open(args.genome_contig_mapping, 'rt') as f:
+        for l in f:
+            a,b = [v.strip() for v in l.split(',')]
+            genome = clean_name(a)
+            if not genome in genome_index:
+                add_genome_to_db(genome, db)
+            contig2genome[b] = genome_index[genome]
+    genome2species = {genome_index[k]:species_index[v] for k,v in genome2species.items() if k in genome_index}
+    
+    db.commit()
+    transaction_count = 0
+    
+    
+    # Read reference seqs
+    reference_index = {}
+    reference_count = 0
+    
+    def add_reference_to_db(reference, length, db):
+        global reference_count
+        global reference_index
+        global transaction_count
+        global commit_n
+    
+        reference_index[reference] = int(reference_count)
+        reference_count += 1
+        db.execute(f'''
+            INSERT INTO reference (idx, name, length, genome) 
+            VALUES ({reference_index[reference]}, "{reference}", {length}, {contig2genome[reference]});
+        ''')
+        transaction_count += 1
+        if transaction_count%commit_n == 0:
+            db.commit()
+            
+    with open(args.refs, 'rt') as f:
+        for k,v in read_fasta(f, split_header=True):
+            add_reference_to_db(k, len(v), db)
+    
+    db.commit()
+    transaction_count = 0
+    
+    
+    # Read FASTQ reads
+    query_index = {}
+    query_count = 0
+    query_length = {}
+    
+    def add_query_to_db(query, read2, length, db):
+        global query_count
+        global query_index
+        global transaction_count
+        global commit_n
+    
+        query_index[(query,read2)] = int(query_count)
+        query_count += 1
+        db.execute(f'''
+            INSERT INTO query (idx, name, pair, length) 
+            VALUES ({query_index[(query,read2)]}, "{query}", {read2}, {length});
+        ''')
+        transaction_count += 1
+        if transaction_count%commit_n == 0:
+            db.commit()
+    
+    read2 = 0
+    with gzip.open(args.reads1) as f:
+        for k,s,q in read_fastq(f, split_header=True):
+            if bool(args.remove_paired_suffix):
+                query = k.decode()[:-2]
+            else:
+                query = k.decode()
+            add_query_to_db(query, read2, len(s), db)
+            query_length[query_index[(query, read2)]] = len(s)
+    if args.reads2 is not None:
+        read2 = 1
+        with gzip.open(args.reads2) as f:
+            for k,s,q in read_fastq(f, split_header=True):
+                if bool(args.remove_paired_suffix):
+                    query = k.decode()[:-2]
+                else:
+                    query = k.decode()
+                add_query_to_db(query, read2, len(s), db)
+                query_length[query_index[(query, read2)]] = len(s)
+    
+    db.commit()
+    transaction_count = 0
 
+    # Read BAM mappings
+
+    nm_suffix = 'nm:i:'
+    as_suffix = 'as:i:'
     def parse_cigar(cigar_str):
         cigar_codes = {
             'M': (True, True),
@@ -301,25 +398,8 @@ if __name__ == '__main__':
                 v.append(c)
     
         return qalength, ralength, alength, n_matches, n_exact_matches
-        
-    query_count = 0
-    query_index = {}
-    reference_list = []
-    reference_index = {}
-    genome_list = []
-    genome_index = {}
-    species_list = []
-    species_index = {}
-
-    transaction_count = 0
-
-    commit_n = 1_000_000
-    query_batch_n = 100_000
-    nm_suffix = 'nm:i:'
-    as_suffix = 'as:i:'
 
     def parse_sam_line(read, remove_paired_suffix=False):
-        global read_lengths
         global query_count
         global query_index
         global reference_list
@@ -371,14 +451,13 @@ if __name__ == '__main__':
         cigar = read_[5]
         qa_length, ra_length, alength, n_matches, n_exact_matches = parse_cigar(cigar)
         forward = flags_int & (16 if read1 else 32) 
-        q_length = read_lengths[query][read2]
         reference = read_[2].split()[0]
-        r_length = contig_lengths[reference]
         rlength = int(read_[7])
         rstart = int(read_[3])
         rend = rstart+ra_length
         ani = 1-(nm_tag/alength)
         ani_gapped = n_matches/alength
+        q_length = query_length[query_index[(query,read2)]]
         ani_gapped_fullread = n_matches/max([alength, q_length])
         align_score = as_tag
 
@@ -388,57 +467,13 @@ if __name__ == '__main__':
         genome = contig2genome[reference]
         species = genome2species[genome] if genome in genome2species else 'unknown'
 
-        if not (query,read2) in query_index:
-            query_index[(query,read2)] = int(query_count)
-            query_count += 1
-            db.execute(f'''
-                INSERT INTO query (idx, name, pair, length) 
-                VALUES ({query_index[(query,read2)]}, "{query}", {read2}, {q_length});
-            ''')
-            transaction_count += 1
-            if transaction_count%commit_n == 0:
-                db.commit()
-        
-        if not species in species_index:
-            species_index[species] = len(species_list)
-            species_list.append(species)
-            db.execute(f'''
-                INSERT INTO species (idx, name)
-                VALUES ({species_index[species]}, "{species}");
-            ''')
-            transaction_count += 1
-            if transaction_count%commit_n == 0:
-                db.commit()
-            
-        if not genome in genome_index:
-            genome_index[genome] = len(genome_list)
-            genome_list.append(genome)
-            db.execute(f'''
-                INSERT INTO genome (idx, name) 
-                VALUES ({genome_index[genome]}, "{genome}");
-            ''')
-            transaction_count += 1
-            if transaction_count%commit_n == 0:
-                db.commit()
-        
-        if not reference in reference_index:
-            reference_index[reference] = len(reference_list)
-            reference_list.append(reference)
-            db.execute(f'''
-                INSERT INTO reference (idx, name, genome, length) 
-                VALUES ({reference_index[reference]}, "{reference}", {genome_index[genome]}, {r_length});
-            ''')
-            transaction_count += 1
-            if transaction_count%commit_n == 0:
-                db.commit()
-        
         db.execute(f'''
             INSERT INTO species_genome_read_mappings (
                 species, genome, query, reference,
                 rstart, rend, ani, ani_gapped, ani_gapped_fullread
             ) 
             VALUES (
-                {species_index[species]}, {genome_index[genome]}, {query_index[(query,read2)]}, {reference_index[reference]}, 
+                {species}, {genome}, {query_index[(query,read2)]}, {reference_index[reference]}, 
                 {rstart}, {rend}, {ani}, {ani_gapped}, {ani_gapped_fullread}
             );
         ''')
@@ -462,9 +497,11 @@ if __name__ == '__main__':
 
     db.execute('CREATE INDEX query_name_idx ON query (name);')
     db.execute('CREATE INDEX reference_name_idx ON reference (name);')
+    db.execute('CREATE INDEX reference_genome_idx ON reference (genome);')
     db.execute('CREATE INDEX cluster_name_idx ON cluster (name);')
     db.execute('CREATE INDEX species_name_idx ON species (name);')
     db.execute('CREATE INDEX genome_name_idx ON genome (name);')
+    db.execute('CREATE INDEX genome_species_idx ON genome (species);')
 
     db.execute('CREATE INDEX species_cds_species_idx ON species_cds_read_mappings (species);')
     db.execute('CREATE INDEX species_cds_genome_idx ON species_cds_read_mappings (genome);')

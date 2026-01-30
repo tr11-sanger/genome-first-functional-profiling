@@ -104,11 +104,6 @@ workflow GFFP {
     SYLPH_PROFILE(reads_ch, sylph_db)
     // SYLPH_QUERY(reads_ch, sylph_db)
 
-    genome_fp_lookup_table = dbs.genome_catalogue
-        .map { meta, fp ->
-            file("${fp}/${meta.files.filepath_lookup}")
-        }
-        .first()
     genomes_ch = channel.empty()
     contigs_ch = channel.empty()
     if (params.sourmash_genome_selector) {
@@ -125,9 +120,14 @@ workflow GFFP {
         sourmash2fasta_ch = SOURMASH_GATHER.out.result
             .map{ meta,fp -> [meta, fp, file(params.genome_species)] }
     
+        sourmash_genome_fp_lookup_table = dbs.genome_catalogue
+            .map { meta, fp ->
+                file("${fp}/${meta.files.sourmash_filepath_lookup}")
+            }
+        .first()
         SOURMASH2FASTA(
             sourmash2fasta_ch,
-            genome_fp_lookup_table
+            sourmash_genome_fp_lookup_table
         )
     
         // filter out if no genomes/contigs
@@ -141,9 +141,13 @@ workflow GFFP {
         )
     }
     if (params.sylph_genome_selector) {
+        sylph_genome_fp_lookup_table = dbs.genome_catalogue
+            .map { meta, fp ->
+                file("${fp}/${meta.files.sylph_filepath_lookup}")
+            }
         SYLPH2FASTA(
             SYLPH_PROFILE.out.profile_out,
-            genome_fp_lookup_table
+            sylph_genome_fp_lookup_table
         )
 
         // filter out if no genomes/contigs

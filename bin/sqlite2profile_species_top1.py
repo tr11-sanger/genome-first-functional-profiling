@@ -104,8 +104,8 @@ if __name__ == '__main__':
         SELECT qu.name, qu.pair, ma.idx, ma.ani_gapped_fullread, ma.reference, ma.genome, ma.species
         FROM species_genome_read_mappings AS ma
         LEFT JOIN query AS qu ON ma.query = qu.idx
-        ORDER BY qu.name;'''
-    )
+        ORDER BY qu.name;
+    ''')
     
     current_qn = None
     paired_mappings = defaultdict(lambda :defaultdict(set))
@@ -164,6 +164,10 @@ if __name__ == '__main__':
                     
                 current_gi = gi
                 current_qi = qi
+
+        # this needs to be sorted again! add to new table then read from that table?
+        # or some other method to record top match?
+
 
         # identify mappings that map to the top species
         print('Trimming mappings to only match to top species:', datetime.datetime.now(), flush=True)

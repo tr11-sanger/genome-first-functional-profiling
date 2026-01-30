@@ -6,16 +6,18 @@
 include { samplesheetToList } from 'plugin/nf-schema'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { FETCHDB } from '../subworkflows/local/fetchdb/main'
+include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
+include { FASTP } from '../modules/nf-core/fastp/main'
 include { SYLPH_PROFILE } from '../modules/nf-core/sylph/profile/main'
 include { SYLPH_QUERY } from '../modules/local/sylph/query/main'
 include { SOURMASH_GATHER } from '../modules/nf-core/sourmash/gather/main'
 include { SOURMASH_SKETCH } from '../modules/nf-core/sourmash/sketch/main'
 include { SOURMASH2FASTA } from '../modules/local/sourmash2fasta/main'
+include { SYLPH2FASTA } from '../modules/local/sylph2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN_BAM2SQLITE } from '../modules/local/bowtie2/align_bam2sqlite/main'
 include { SQLITE2PROFILE_TOP } from '../modules/local/sqlite2profile_top/main'
 include { SQLITE2PROFILE_GREEDY } from '../modules/local/sqlite2profile_greedy/main'
-include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,6 +80,17 @@ workflow GFFP {
         }
         .set { dbs }
     
+    if (!params.skip_qc) {
+        FASTP(
+            reads_ch,
+            [],
+            false,
+            false,
+            false,
+        )
+        ch_versions = ch_versions.mix(FASTP.out.versions)
+        reads_ch = FASTP.out.reads
+    }
 
     // Run fast genome profiling
     sylph_db = dbs.genome_catalogue
@@ -86,34 +99,50 @@ workflow GFFP {
         }
         .first()
     SYLPH_PROFILE(reads_ch, sylph_db)
-    SYLPH_QUERY(reads_ch, sylph_db)
+    // SYLPH_QUERY(reads_ch, sylph_db)
 
-    sourmash_db = dbs.genome_catalogue
-        .map { meta, fp ->
-            file("${fp}/${meta.files.sourmash}")
-        }
-        .first()
-    SOURMASH_SKETCH(reads_ch)
-    SOURMASH_GATHER(SOURMASH_SKETCH.out.signatures, sourmash_db, false, false, false, false)
-
-
-    // Create bowtie2 index and align reads
     genome_fp_lookup_table = dbs.genome_catalogue
         .map { meta, fp ->
             file("${fp}/${meta.files.filepath_lookup}")
         }
         .first()
-    sourmash2fasta_ch = SOURMASH_GATHER.out.result
-        .map{ meta,fp -> [meta, fp, file(params.genome_species)] }
+    genomes_ch = channel.empty()
+    if (params.sourmash_genome_selector) {
+        sourmash_db = dbs.genome_catalogue
+            .map { meta, fp ->
+                file("${fp}/${meta.files.sourmash}")
+            }
+            .first()
+        SOURMASH_SKETCH(reads_ch)
+        SOURMASH_GATHER(SOURMASH_SKETCH.out.signatures, sourmash_db, false, false, false, false)
+    
+    
+        // Create bowtie2 index and align reads
+        sourmash2fasta_ch = SOURMASH_GATHER.out.result
+            .map{ meta,fp -> [meta, fp, file(params.genome_species)] }
+    
+        SOURMASH2FASTA(
+            sourmash2fasta_ch,
+            genome_fp_lookup_table
+        )
+    
+        // filter out if no genomes
+        genomes_ch = genomes_ch.mix(
+            SOURMASH2FASTA.out.fasta
+                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+        )
+    }
+    if (params.sylph_genome_selector) {
+        SYLPH2FASTA(
+            SYLPH_PROFILE.out.profile_out,
+            genome_fp_lookup_table
+        )
 
-    SOURMASH2FASTA(
-        sourmash2fasta_ch,
-        genome_fp_lookup_table
-    )
-
-    // filter out if no genomes
-    genomes_ch = SOURMASH2FASTA.out.fasta
-        .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+        genomes_ch = genomes_ch.mix(
+            SYLPH2FASTA.out.fasta
+                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+        )
+    }
 
     BOWTIE2_BUILD(genomes_ch)
 

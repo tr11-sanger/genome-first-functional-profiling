@@ -8,6 +8,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { FETCHDB } from '../subworkflows/local/fetchdb/main'
 include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
 include { FASTP } from '../modules/nf-core/fastp/main'
+include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { SYLPH_PROFILE } from '../modules/nf-core/sylph/profile/main'
 include { SYLPH_QUERY } from '../modules/local/sylph/query/main'
 include { SOURMASH_GATHER } from '../modules/nf-core/sourmash/gather/main'
@@ -89,6 +90,9 @@ workflow GFFP {
         )
         ch_versions = ch_versions.mix(FASTP.out.versions_fastp)
         reads_ch = FASTP.out.reads
+        qc_stats = FASTP.out.fastp_json
+    } else {
+        qc_stats = channel.empty()
     }
 
     // Run fast genome profiling
@@ -189,6 +193,15 @@ workflow GFFP {
         // taxonomic_profile = SQLITE2PROFILE_TOP.out.species_profile
         // functional_profile = SQLITE2PROFILE_TOP.out.species_cds_profile
     }
+
+    MULTIQC(
+        qc_stats,
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
 
     emit:
     // sylph_profile = SYLPH_PROFILE.out.profile_out

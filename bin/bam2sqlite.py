@@ -249,6 +249,8 @@ if __name__ == '__main__':
         global transaction_count
         global commit_n
     
+        if genome not in genome2species:
+            genome2species[genome] = genome
         species = genome2species[genome]
         if not species in species_index:
             species_index[species] = int(species_count)

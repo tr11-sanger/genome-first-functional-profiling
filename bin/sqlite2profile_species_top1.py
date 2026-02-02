@@ -269,6 +269,12 @@ if __name__ == '__main__':
     # genome coverage
     genomes_coverage = {k:v for _,d in species_genomes_coverage.items() for k,v in d.items()}
 
+    # maapping statistics
+    # number of reads total
+    # number of read ends
+    # number of mapped read pairs
+    # number of mapped read ends
+
     print(f'Writing outputs', datetime.datetime.now(), flush=True)
 
     # Outputs

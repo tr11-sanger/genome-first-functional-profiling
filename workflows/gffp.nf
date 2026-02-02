@@ -115,7 +115,6 @@ workflow GFFP {
         SOURMASH_SKETCH(reads_ch)
         SOURMASH_GATHER(SOURMASH_SKETCH.out.signatures, sourmash_db, false, false, false, false)
     
-    
         // Create bowtie2 index and align reads
         sourmash2fasta_ch = SOURMASH_GATHER.out.result
             .map{ meta,fp -> [meta, fp, file(params.genome_species)] }
@@ -124,7 +123,7 @@ workflow GFFP {
             .map { meta, fp ->
                 file("${fp}/${meta.files.sourmash_filepath_lookup}")
             }
-        .first()
+            .first()
         SOURMASH2FASTA(
             sourmash2fasta_ch,
             sourmash_genome_fp_lookup_table
@@ -145,6 +144,7 @@ workflow GFFP {
             .map { meta, fp ->
                 file("${fp}/${meta.files.sylph_filepath_lookup}")
             }
+            .first()
         SYLPH2FASTA(
             SYLPH_PROFILE.out.profile_out,
             sylph_genome_fp_lookup_table

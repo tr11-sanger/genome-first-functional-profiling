@@ -15,11 +15,10 @@ process SQLITE2PROFILE_TOP {
     script:
     def prefix = task.ext.prefix ? task.ext.prefix : meta.id 
     """
-    sqlite2profile_top.py \\
+    sqlite2profile_top2.py \\
         --sqlite "${sqlite}" \\
         --genome_cds_filepaths "${genome2cds}" \\
         --output_prefix "${prefix}" \\
-        --min_coverage_ratio "${params.min_coverage_ratio}" \\
         --output_dir output
     """
 

@@ -6,6 +6,8 @@
 include { samplesheetToList } from 'plugin/nf-schema'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { FETCHDB } from '../subworkflows/local/fetchdb/main'
+include { BBMAP_REFORMAT_STANDARDISE } from '../modules/local/bbmap/reformat_standardise/main'
+include { BBMAP_REPAIR } from '../modules/nf-core/bbmap/repair/main'
 include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
 include { FASTP } from '../modules/nf-core/fastp/main'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
@@ -45,6 +47,21 @@ workflow GFFP {
                 (reads2 == []) ? [file(reads1)] : [file(reads1), file(reads2)],
             ]
         }
+    
+    // Standardise headers, De-interleave interleaved paired-end reads
+    BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
+    ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
+    reads_ch = BBMAP_REFORMAT_STANDARDISE.out.reformated
+    
+    // Remove un-paired reads (if they should be paired)
+    paired_single_reads = reads_ch
+        .branch { meta, _reads -> 
+            single: meta.single_end
+            paired: !meta.single_end
+        }
+    BBMAP_REPAIR(paired_single_reads.paired, false)
+    ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
+    reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
     
     if (params.reads_subsampling != -1) {
         BBMAP_SAMPLE_FASTX(reads_ch, params.reads_subsampling, true)
@@ -187,12 +204,7 @@ workflow GFFP {
         .map { meta, sqlite -> 
             [meta, sqlite, file(params.genome2cds)] 
         }
-    if (params.greedy_profile) {
-        SQLITE2PROFILE_GREEDY(profile_ch)
-        // taxonomic_profile = SQLITE2PROFILE_GREEDY.out.species_profile
-        // functional_profile = SQLITE2PROFILE_GREEDY.out.species_cds_profile
-    }
-    if (params.top_profile) {
+    if (params.profile) {
         SQLITE2PROFILE_TOP(profile_ch)
         // taxonomic_profile = SQLITE2PROFILE_TOP.out.species_profile
         // functional_profile = SQLITE2PROFILE_TOP.out.species_cds_profile

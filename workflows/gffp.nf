@@ -47,6 +47,12 @@ workflow GFFP {
             ]
         }
     
+    // sub-sample reads
+    if (params.reads_subsampling != -1) {
+        BBMAP_SAMPLE_FASTX(reads_ch, params.reads_subsampling, true)
+        reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
+    }
+
     // Standardise headers, De-interleave interleaved paired-end reads
     BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
     ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
@@ -62,11 +68,6 @@ workflow GFFP {
     ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
     reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
     
-    if (params.reads_subsampling != -1) {
-        BBMAP_SAMPLE_FASTX(reads_ch, params.reads_subsampling, true)
-        reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
-    }
-
     // Fetch databases
     db_ch = channel
         .from(

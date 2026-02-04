@@ -20,7 +20,6 @@ include { SYLPH2FASTA } from '../modules/local/sylph2fasta/main'
 include { BOWTIE2_BUILD } from '../modules/nf-core/bowtie2/build/main'
 include { BOWTIE2_ALIGN_BAM2SQLITE } from '../modules/local/bowtie2/align_bam2sqlite/main'
 include { SQLITE2PROFILE_TOP } from '../modules/local/sqlite2profile_top/main'
-include { SQLITE2PROFILE_GREEDY } from '../modules/local/sqlite2profile_greedy/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

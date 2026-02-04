@@ -53,7 +53,7 @@ workflow GFFP {
         reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
     }
 
-    if (!params.skip_standadise) {
+    if (!params.skip_standardise) {
         // Standardise headers, De-interleave interleaved paired-end reads
         BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
         ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)

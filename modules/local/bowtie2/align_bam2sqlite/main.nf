@@ -54,7 +54,8 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
         --genome_species "${genome_species}" \\
         --refs "${fasta}" \\
         --out_fp "${prefix}.sqlite" \\
-        --min_ani "${params.min_ani}"
+        --min_ani "${params.min_ani}" \\
+        $args2
             
 
     cat <<-END_VERSIONS > versions.yml

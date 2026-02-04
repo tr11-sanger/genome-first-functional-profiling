@@ -53,20 +53,22 @@ workflow GFFP {
         reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
     }
 
-    // Standardise headers, De-interleave interleaved paired-end reads
-    BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
-    ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
-    reads_ch = BBMAP_REFORMAT_STANDARDISE.out.reformated
+    if (!params.skip_standadise) {
+        // Standardise headers, De-interleave interleaved paired-end reads
+        BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
+        ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
+        reads_ch = BBMAP_REFORMAT_STANDARDISE.out.reformated
     
-    // Remove un-paired reads (if they should be paired)
-    paired_single_reads = reads_ch
-        .branch { meta, _reads -> 
-            single: meta.single_end
-            paired: !meta.single_end
-        }
-    BBMAP_REPAIR(paired_single_reads.paired, false)
-    ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
-    reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
+        // Remove un-paired reads (if they should be paired)
+        paired_single_reads = reads_ch
+            .branch { meta, _reads -> 
+                single: meta.single_end
+                paired: !meta.single_end
+            }
+        BBMAP_REPAIR(paired_single_reads.paired, false)
+        ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
+        reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
+    }
     
     // Fetch databases
     db_ch = channel

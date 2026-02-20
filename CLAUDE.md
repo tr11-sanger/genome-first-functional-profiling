@@ -103,6 +103,7 @@ Strict mode is enabled (`nextflow.enable.strict = true`). Container registry: qu
 | `ftp_fetch.timeout` | 60 | Connection timeout in seconds |
 | `ftp_fetch.resume` | true | Enable curl resume for partial downloads |
 | `ftp_fetch.soft_fail` | true | Create empty outputs on download failure instead of failing |
+| `ftp_fetch.delete_original` | false | Delete original downloaded files after successful processing |
 
 ### Plugins
 

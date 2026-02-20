@@ -15,6 +15,7 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
     val   timeout
     val   resume
     val   soft_fail
+    val   delete_original
 
     output:
     tuple val(meta), path('*.sampled.fastq.gz'), optional:true, emit: fastx
@@ -77,6 +78,7 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
     WAIT_RETRY="${wait_retry}"
     IS_SINGLE="${is_single}"
     SOFT_FAIL="${soft_fail}"
+    DELETE_ORIGINAL="${delete_original}"
     URL1="${url1}"
     URL2="${url2}"
     DL_FILE1="${dl_file1}"
@@ -151,6 +153,10 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
 
         if [ "\${TOOL_OK}" = "true" ]; then
             echo "reformat.sh succeeded on attempt \${attempt}" >> "\${DOWNLOAD_LOG}"
+            if [ "\${DELETE_ORIGINAL}" = "true" ]; then
+                echo "Deleting original downloaded files" >> "\${DOWNLOAD_LOG}"
+                rm -f "\${DL_FILE1}" "\${DL_FILE2}"
+            fi
             SUCCESS=true
             break
         else

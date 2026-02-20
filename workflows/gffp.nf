@@ -52,13 +52,14 @@ workflow GFFP {
     // sub-sample reads
     if (params.reads_subsampling != -1) {
         CURL_FETCH_BBMAP_SAMPLE_FASTX(
-            reads_ch, 
+            reads_ch,
             params.reads_subsampling,
             params.ftp_fetch.max_retries,
             params.ftp_fetch.wait_retry,
             params.ftp_fetch.timeout,
             params.ftp_fetch.resume,
-            params.ftp_fetch.soft_fail
+            params.ftp_fetch.soft_fail,
+            params.ftp_fetch.delete_original
         )
         reads_ch = CURL_FETCH_BBMAP_SAMPLE_FASTX.out.fastx
     
@@ -81,13 +82,14 @@ workflow GFFP {
     } else {
         // Standardise headers, De-interleave interleaved paired-end reads
         CURL_FETCH_BBMAP_REFORMAT_STANDARDISE(
-            reads_ch, 
+            reads_ch,
             'fastq.gz',
             params.ftp_fetch.max_retries,
             params.ftp_fetch.wait_retry,
             params.ftp_fetch.timeout,
             params.ftp_fetch.resume,
-            params.ftp_fetch.soft_fail
+            params.ftp_fetch.soft_fail,
+            params.ftp_fetch.delete_original
         )
         reads_ch = CURL_FETCH_BBMAP_REFORMAT_STANDARDISE.out.reformated
 

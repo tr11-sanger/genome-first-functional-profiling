@@ -1,53 +1,87 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-name: "fetchunzip"
-## TODO nf-core: Add a description of the module and list keywords
-description: write your description here
+name: "bam2csv_top"
+description: Stream BAM alignments through samtools into a top (winner-takes-all) profiler with coverage-ratio filtering
 keywords:
-  - sort
-  - example
-  - genomics
+  - profiling
+  - metagenomics
+  - coverage
+  - bam
+  - alignment
 tools:
-  - "fetchunzip":
-      ## TODO nf-core: Add a description and other details for the software below
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: 
-      identifier: 
+  - "samtools":
+      description: "Tools for manipulating next-generation sequencing data"
+      homepage: "http://www.htslib.org/"
+      documentation: "http://www.htslib.org/doc/samtools.html"
+      doi: "10.1093/bioinformatics/btp352"
+      licence: ["MIT"]
+      identifier: "biotools:samtools"
+  - "bam2csv_sqlite_top":
+      description: "Custom script for winner-takes-all read assignment with ANI and coverage-ratio filtering"
+      licence: ["MIT"]
+      identifier: ""
 
-## TODO nf-core: Add a description of all of the variables used as input
 input:
-  #
-  ## TODO nf-core: Delete / customise this example input
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
     - bam:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
-
-## TODO nf-core: Add a description of all of the variables used as output
-output:
-  - bam:
-  #
-  ## TODO nf-core: Delete / customise this example output
-    - "*.bam":
+        description: BAM file of read alignments
+        pattern: "*.bam"
+    - genome2cds:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
-  - versions:
-    - "versions.yml":
+        description: File listing paths to genome-to-CDS mapping TSV files
+        pattern: "*.txt"
+    - genome_contig_mapping:
+        type: file
+        description: CSV mapping genome accession to contig IDs
+        pattern: "*.csv"
+    - genome_species:
+        type: file
+        description: TSV mapping genome accession to species
+        pattern: "*.tsv"
+    - refs:
+        type: file
+        description: Reference FASTA used for alignment
+        pattern: "*.{fna,fa,fasta}"
+  - - delete_bam:
+        type: boolean
+        description: Whether to delete the BAM file after processing
+
+output:
+  species_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*species_coverage.tsv.gz":
+          type: file
+          description: Per-species coverage depth and breadth TSV
+          pattern: "*species_coverage.tsv.gz"
+  genome_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*genome_coverage.tsv.gz":
+          type: file
+          description: Per-genome coverage TSV
+          pattern: "*genome_coverage.tsv.gz"
+  species_cds_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*species_cds_coverage.tsv.gz":
+          type: file
+          description: CDS-level coverage TSV per species
+          pattern: "*species_cds_coverage.tsv.gz"
+      - "*species_index.txt.gz":
+          type: file
+          description: Species index for CDS coverage profiles
+          pattern: "*species_index.txt.gz"
+  versions:
+    - versions.yml:
         type: file
         description: File containing software versions
         pattern: "versions.yml"

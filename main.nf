@@ -1,11 +1,10 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/genomeannotation
+    genome-first-functional-profiling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/genomeannotation
-    Website: https://nf-co.re/genomeannotation
-    Slack  : https://nfcore.slack.com/channels/genomeannotation
+    Whole genome sequencing reads mapped to genomes and then to genes
+    for fast and highly accurate profiling of metagenomes.
 ----------------------------------------------------------------------------------------
 */
 

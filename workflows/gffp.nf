@@ -4,11 +4,12 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { samplesheetToList } from 'plugin/nf-schema'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { FETCHDB } from '../subworkflows/local/fetchdb/main'
 include { BBMAP_REFORMAT_STANDARDISE } from '../modules/local/bbmap/reformat_standardise/main'
+include { CURL_FETCH_BBMAP_REFORMAT_STANDARDISE } from '../modules/local/curl_fetch_bbmap_reformat_standardise/main'
 include { BBMAP_REPAIR } from '../modules/nf-core/bbmap/repair/main'
 include { BBMAP_SAMPLE_FASTX } from '../modules/local/bbmap_sample_fastx/main'
+include { CURL_FETCH_BBMAP_SAMPLE_FASTX } from '../modules/local/curl_fetch_bbmap_sample_fastx/main'
 include { FASTP } from '../modules/nf-core/fastp/main'
 include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { SYLPH_PROFILE } from '../modules/nf-core/sylph/profile/main'
@@ -49,25 +50,57 @@ workflow GFFP {
     
     // sub-sample reads
     if (params.reads_subsampling != -1) {
-        BBMAP_SAMPLE_FASTX(reads_ch, params.reads_subsampling, true)
-        reads_ch = BBMAP_SAMPLE_FASTX.out.fastx
-    }
-
-    if (!params.skip_standardise) {
-        // Standardise headers, De-interleave interleaved paired-end reads
-        BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
-        ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
-        reads_ch = BBMAP_REFORMAT_STANDARDISE.out.reformated
+        CURL_FETCH_BBMAP_SAMPLE_FASTX(
+            reads_ch, 
+            params.reads_subsampling,
+            params.ftp_fetch.max_retries,
+            params.ftp_fetch.wait_retry,
+            params.ftp_fetch.timeout,
+            params.ftp_fetch.resume,
+            params.ftp_fetch.soft_fail
+        )
+        reads_ch = CURL_FETCH_BBMAP_SAMPLE_FASTX.out.fastx
     
-        // Remove un-paired reads (if they should be paired)
-        paired_single_reads = reads_ch
-            .branch { meta, _reads -> 
-                single: meta.single_end
-                paired: !meta.single_end
-            }
-        BBMAP_REPAIR(paired_single_reads.paired, false)
-        ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
-        reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
+        if (!params.skip_standardise) {
+            // Standardise headers, De-interleave interleaved paired-end reads
+            BBMAP_REFORMAT_STANDARDISE(reads_ch, 'fastq.gz')
+            ch_versions = ch_versions.mix(BBMAP_REFORMAT_STANDARDISE.out.versions)
+            reads_ch = BBMAP_REFORMAT_STANDARDISE.out.reformated
+    
+            // Remove un-paired reads (if they should be paired)
+            paired_single_reads = reads_ch
+                .branch { meta, _reads -> 
+                    single: meta.single_end
+                    paired: !meta.single_end
+                }
+            BBMAP_REPAIR(paired_single_reads.paired, false)
+            ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
+            reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
+        }
+    } else {
+        // Standardise headers, De-interleave interleaved paired-end reads
+        CURL_FETCH_BBMAP_REFORMAT_STANDARDISE(
+            reads_ch, 
+            'fastq.gz',
+            params.ftp_fetch.max_retries,
+            params.ftp_fetch.wait_retry,
+            params.ftp_fetch.timeout,
+            params.ftp_fetch.resume,
+            params.ftp_fetch.soft_fail
+        )
+        reads_ch = CURL_FETCH_BBMAP_REFORMAT_STANDARDISE.out.reformated
+
+        if (!params.skip_standardise) {
+            // Remove un-paired reads (if they should be paired)
+            paired_single_reads = reads_ch
+                .branch { meta, _reads -> 
+                    single: meta.single_end
+                    paired: !meta.single_end
+                }
+            BBMAP_REPAIR(paired_single_reads.paired, false)
+            ch_versions = ch_versions.mix(BBMAP_REPAIR.out.versions)
+            reads_ch = BBMAP_REPAIR.out.repaired.mix(paired_single_reads.single)
+        }
     }
     
     // Fetch databases
@@ -91,7 +124,7 @@ workflow GFFP {
         )
         .filter { it -> it }
 
-    FETCHDB(db_ch, "${launchDir}/${params.databases.cache_path}")
+    FETCHDB(db_ch, "${projectDir}/${params.databases.cache_path}")
     dbs_path_ch = FETCHDB.out.dbs
 
     dbs_path_ch
@@ -107,7 +140,6 @@ workflow GFFP {
             false,
             false,
         )
-        ch_versions = ch_versions.mix(FASTP.out.versions_fastp)
         reads_ch = FASTP.out.reads
         qc_stats = FASTP.out.json
     } else {
@@ -151,11 +183,11 @@ workflow GFFP {
         // filter out if no genomes/contigs
         genomes_ch = genomes_ch.mix(
             SOURMASH2FASTA.out.fasta
-                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+                .filter { _meta, fp -> fp.exists() && fp.text.trim().length() > 0 }
         )
         contigs_ch = contigs_ch.mix(
             SOURMASH2FASTA.out.contigs
-                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+                .filter { _meta, fp -> fp.exists() && fp.text.trim().length() > 0 }
         )
     }
     if (params.sylph_genome_selector) {
@@ -172,11 +204,11 @@ workflow GFFP {
         // filter out if no genomes/contigs
         genomes_ch = genomes_ch.mix(
             SYLPH2FASTA.out.fasta
-                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+                .filter { _meta, fp -> fp.exists() && fp.text.trim().length() > 0 }
         )
         contigs_ch = contigs_ch.mix(
             SYLPH2FASTA.out.contigs
-                .filter { _meta, fp -> fp.exists() & (fp.readLines().size() > 0) }
+                .filter { _meta, fp -> fp.exists() && fp.text.trim().length() > 0 }
         )
     }
 
@@ -206,7 +238,7 @@ workflow GFFP {
         .map { meta, sqlite -> 
             [meta, sqlite, file(params.genome2cds)] 
         }
-    if (params.profile) {
+    if (params.run_profiling) {
         SQLITE2PROFILE_TOP(profile_ch)
         // taxonomic_profile = SQLITE2PROFILE_TOP.out.species_profile
         // functional_profile = SQLITE2PROFILE_TOP.out.species_cds_profile

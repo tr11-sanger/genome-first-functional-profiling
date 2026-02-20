@@ -1,56 +1,45 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "fetchunzip"
-## TODO nf-core: Add a description of the module and list keywords
-description: write your description here
+description: Validate checksums and extract downloaded archives into a named directory
 keywords:
-  - sort
-  - example
-  - genomics
+  - download
+  - extract
+  - database
+  - checksum
 tools:
   - "fetchunzip":
-      ## TODO nf-core: Add a description and other details for the software below
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: 
-      identifier: 
+      description: "Custom module to verify MD5 checksums and decompress tar.gz, gz, or plain files into a staging directory"
+      licence: ["MIT"]
+      identifier: ""
 
-## TODO nf-core: Add a description of all of the variables used as input
 input:
-  #
-  ## TODO nf-core: Delete / customise this example input
-    - bam:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing database information
+          e.g. [ id:'genome_catalogue' ]
+    - dir_name:
+        type: string
+        description: Name of the output directory for extracted files
+    - fp:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
+        description: Downloaded archive file (tar.gz, gz, or plain)
+    - checksum_path:
+        type: file
+        description: Optional file containing the expected MD5 checksum
+    - checksum:
+        type: string
+        description: Optional inline MD5 checksum string
 
-## TODO nf-core: Add a description of all of the variables used as output
 output:
-  - bam:
-  #
-  ## TODO nf-core: Delete / customise this example output
-    - "*.bam":
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
-  - versions:
-    - "versions.yml":
-        type: file
-        description: File containing software versions
-        pattern: "versions.yml"
+  database:
+    - - meta:
+          type: map
+          description: Groovy Map containing database information
+      - "${dir_name}":
+          type: directory
+          description: Extracted database directory
 
 authors:
   - "@timrozday-mgnify"

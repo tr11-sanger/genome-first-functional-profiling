@@ -1,48 +1,40 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-# # TODO nf-core: Add a description of the module and list keywords
 name: "concatenate"
-description: write your description here
+description: Concatenate a collection of files into a single output file
 keywords:
-  - sort
-  - example
-  - genomics
+  - concatenate
+  - merge
+  - files
 tools:
-  ## TODO nf-core: Add a description and other details for the software below
-  - "concatenate":
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: null
-      identifier: null
+  - "coreutils":
+      description: "GNU core utilities (cat, find)"
+      homepage: "https://www.gnu.org/software/coreutils/"
+      licence: ["GPL-3.0-or-later"]
+      identifier: ""
 
 input:
-  - bam:
-      type: file
-      description: Sorted BAM/CRAM/SAM file
-      pattern: "*.{bam,cram,sam}"
-      ontologies:
-        - edam: http://edamontology.org/format_2572 # BAM
-        - edam: http://edamontology.org/format_2573 # CRAM
-        - edam: http://edamontology.org/format_3462 # SAM
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - out_fn:
+        type: string
+        description: Output filename for the concatenated file
+    - files:
+        type: file
+        description: Collection of files to concatenate
+
 output:
-  bam:
-    - "*.bam":
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: http://edamontology.org/format_2572 # BAM
-          - edam: http://edamontology.org/format_2573 # CRAM
-          - edam: http://edamontology.org/format_3462 # SAM
-  versions:
-    - versions.yml:
-        type: file
-        description: File containing software versions
-        pattern: versions.yml
-        ontologies:
-          - edam: http://edamontology.org/format_3750 # YAML
+  concatenated_file:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "concatenated/*":
+          type: file
+          description: Single concatenated output file
+          pattern: "concatenated/*"
+
 authors:
   - "@timrozday-mgnify"
 maintainers:

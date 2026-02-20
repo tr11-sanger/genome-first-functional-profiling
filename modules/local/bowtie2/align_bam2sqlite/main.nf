@@ -3,9 +3,9 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
     label 'process_high'
 
     conda "${moduleDir}/environment.yml"
-    // container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    //     'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b4/b41b403e81883126c3227fc45840015538e8e2212f13abc9ae84e4b98891d51c/data' :
-    //     'community.wave.seqera.io/library/bowtie2_htslib_samtools_pigz:edeb13799090a2a6' }"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/b4/b41b403e81883126c3227fc45840015538e8e2212f13abc9ae84e4b98891d51c/data' :
+        'community.wave.seqera.io/library/bowtie2_htslib_samtools_pigz:edeb13799090a2a6' }"
 
     input:
     tuple val(meta) , path(reads)
@@ -27,7 +27,8 @@ process BOWTIE2_ALIGN_BAM2SQLITE {
     def args2 = task.ext.args2 ?: ""
     def prefix = task.ext.prefix ?: "${meta.id}"
 
-    def reads_args = ""
+    def reads_args
+    def reads2_arg
     if (meta.single_end) {
         reads_args = "-U ${reads}"
         reads2_arg = ""

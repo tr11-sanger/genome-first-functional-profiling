@@ -1,53 +1,64 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-name: "fetchunzip"
-## TODO nf-core: Add a description of the module and list keywords
-description: write your description here
+name: "sqlite2profile_greedy"
+description: Generate species, genome, and CDS coverage profiles from a SQLite alignment database using greedy multi-mapping assignment
 keywords:
-  - sort
-  - example
-  - genomics
+  - profiling
+  - metagenomics
+  - coverage
+  - sqlite
 tools:
-  - "fetchunzip":
-      ## TODO nf-core: Add a description and other details for the software below
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: 
-      identifier: 
+  - "sqlite2profile_greedy":
+      description: "Custom script for greedy read assignment that iteratively picks the species with most reads"
+      licence: ["MIT"]
+      identifier: ""
 
-## TODO nf-core: Add a description of all of the variables used as input
 input:
-  #
-  ## TODO nf-core: Delete / customise this example input
-    - bam:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - sqlite:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
+        description: Gzipped SQLite database of read alignment mappings
+        pattern: "*.sqlite.gz"
+    - genome2cds:
+        type: file
+        description: File listing paths to genome-to-CDS mapping TSV files
+        pattern: "*.txt"
 
-## TODO nf-core: Add a description of all of the variables used as output
 output:
-  - bam:
-  #
-  ## TODO nf-core: Delete / customise this example output
-    - "*.bam":
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
-  - versions:
-    - "versions.yml":
+  species_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*species_coverage.tsv.gz":
+          type: file
+          description: Per-species coverage depth and breadth TSV
+          pattern: "*species_coverage.tsv.gz"
+  genome_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*genome_coverage.tsv.gz":
+          type: file
+          description: Per-genome coverage TSV
+          pattern: "*genome_coverage.tsv.gz"
+  species_cds_profile:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*species_cds_coverage.tsv.gz":
+          type: file
+          description: CDS-level coverage TSV per species
+          pattern: "*species_cds_coverage.tsv.gz"
+      - "*species_index.txt.gz":
+          type: file
+          description: Species index for CDS coverage profiles
+          pattern: "*species_index.txt.gz"
+  versions:
+    - versions.yml:
         type: file
         description: File containing software versions
         pattern: "versions.yml"

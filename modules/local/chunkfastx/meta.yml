@@ -1,53 +1,40 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "chunkfastx"
-## TODO nf-core: Add a description of the module and list keywords
-description: write your description here
+description: Split a FASTA or FASTQ file into chunks by base count or read count
 keywords:
-  - sort
-  - example
-  - genomics
+  - split
+  - chunk
+  - fasta
+  - fastq
 tools:
-  - "chunkfastx":
-      ## TODO nf-core: Add a description and other details for the software below
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: 
-      identifier: 
+  - "chunk_fastx":
+      description: "Custom Python script to split FASTA/FASTQ files into chunks by target base or read count"
+      licence: ["MIT"]
+      identifier: ""
 
-## TODO nf-core: Add a description of all of the variables used as input
 input:
-  #
-  ## TODO nf-core: Delete / customise this example input
-    - bam:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - reads:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
+        description: Input FASTA or FASTQ file, optionally gzipped
+        pattern: "*.{fa,fasta,fq,fastq,fa.gz,fasta.gz,fq.gz,fastq.gz}"
 
-## TODO nf-core: Add a description of all of the variables used as output
 output:
-  - bam:
-  #
-  ## TODO nf-core: Delete / customise this example output
-    - "*.bam":
-        type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_25722"
-          - edam: "http://edamontology.org/format_2573"
-          - edam: "http://edamontology.org/format_3462"
-          
-  - versions:
-    - "versions.yml":
+  chunked_reads:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "chunked/*":
+          type: file
+          description: One or more chunked FASTA/FASTQ files
+          pattern: "chunked/*"
+  versions:
+    - versions.yml:
         type: file
         description: File containing software versions
         pattern: "versions.yml"

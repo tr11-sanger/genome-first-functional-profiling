@@ -1,48 +1,67 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-# # TODO nf-core: Add a description of the module and list keywords
 name: "sourmash2fasta"
-description: write your description here
+description: Extract genome FASTA files from Sourmash gather results using a lookup table
 keywords:
-  - sort
-  - example
-  - genomics
+  - sourmash
+  - metagenomics
+  - genome selection
+  - fasta
 tools:
-  ## TODO nf-core: Add a description and other details for the software below
   - "sourmash2fasta":
-      description: ""
-      homepage: ""
-      documentation: ""
-      tool_dev_url: ""
-      doi: ""
-      licence: null
-      identifier: null
+      description: "Custom script to parse Sourmash gather CSV, select top genomes per species, and concatenate selected genome FASTA files"
+      licence: ["MIT"]
+      identifier: ""
 
 input:
-  - bam:
-      type: file
-      description: Sorted BAM/CRAM/SAM file
-      pattern: "*.{bam,cram,sam}"
-      ontologies:
-        - edam: http://edamontology.org/format_2572 # BAM
-        - edam: http://edamontology.org/format_2573 # CRAM
-        - edam: http://edamontology.org/format_3462 # SAM
-output:
-  bam:
-    - "*.bam":
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - sourmash_results:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: http://edamontology.org/format_2572 # BAM
-          - edam: http://edamontology.org/format_2573 # CRAM
-          - edam: http://edamontology.org/format_3462 # SAM
+        description: Sourmash gather CSV output
+        pattern: "*.csv"
+    - genome_species:
+        type: file
+        description: TSV mapping genome accession to species
+        pattern: "*.tsv"
+  - - lookup:
+        type: file
+        description: Sorted CSV mapping genome accession to FASTA filepath
+        pattern: "*.csv"
+
+output:
+  genomes:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "genomes_table.csv":
+          type: file
+          description: CSV table of selected genomes with file paths
+          pattern: "genomes_table.csv"
+  contigs:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "contig_mapping.csv":
+          type: file
+          description: CSV mapping genome accession to contig ID
+          pattern: "contig_mapping.csv"
+  fasta:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "genomes.fna":
+          type: file
+          description: Concatenated FASTA of all selected genomes
+          pattern: "genomes.fna"
   versions:
     - versions.yml:
         type: file
         description: File containing software versions
-        pattern: versions.yml
-        ontologies:
-          - edam: http://edamontology.org/format_3750 # YAML
+        pattern: "versions.yml"
+
 authors:
   - "@tr11-sanger"
 maintainers:

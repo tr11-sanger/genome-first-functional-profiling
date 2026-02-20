@@ -1,48 +1,43 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-# # TODO nf-core: Add a description of the module and list keywords
 name: "seqstats"
-description: write your description here
+description: Compute summary statistics (sequence and base counts) for FASTA/FASTQ files
 keywords:
-  - sort
-  - example
-  - genomics
+  - statistics
+  - fasta
+  - fastq
+  - qc
 tools:
-  ## TODO nf-core: Add a description and other details for the software below
-  - "seqstats":
-      description: "Quick summary statistics on fasta/fastq(.gz) files"
-      homepage: "None"
-      documentation: "None"
-      tool_dev_url: "None"
-      doi: ""
+  - "seq_stats":
+      description: "Custom Python script for quick summary statistics on FASTA/FASTQ files"
       licence: ["MIT"]
-      identifier: null
+      identifier: ""
 
 input:
-  - bam:
-      type: file
-      description: Sorted BAM/CRAM/SAM file
-      pattern: "*.{bam,cram,sam}"
-      ontologies:
-        - edam: http://edamontology.org/format_2572 # BAM
-        - edam: http://edamontology.org/format_2573 # CRAM
-        - edam: http://edamontology.org/format_3462 # SAM
-output:
-  bam:
-    - "*.bam":
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - seqs:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: http://edamontology.org/format_2572 # BAM
-          - edam: http://edamontology.org/format_2573 # CRAM
-          - edam: http://edamontology.org/format_3462 # SAM
+        description: Input FASTA or FASTQ file, optionally gzipped
+        pattern: "*.{fa,fasta,fq,fastq,fa.gz,fasta.gz,fq.gz,fastq.gz}"
+
+output:
+  stats:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "stats.json":
+          type: file
+          description: JSON summary with read and base counts
+          pattern: "stats.json"
   versions:
     - versions.yml:
         type: file
         description: File containing software versions
-        pattern: versions.yml
-        ontologies:
-          - edam: http://edamontology.org/format_3750 # YAML
+        pattern: "versions.yml"
+
 authors:
   - "@timrozday-mgnify"
 maintainers:

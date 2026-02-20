@@ -47,7 +47,7 @@ workflow GFFP {
                 (reads2 == []) ? [reads1] : [reads1, reads2],
             ]
         }
-    reads_ch.view { it -> "reads_ch - ${it}"}
+    // reads_ch.view { it -> "reads_ch - ${it}"}
     
     // sub-sample reads
     if (params.reads_subsampling != -1) {

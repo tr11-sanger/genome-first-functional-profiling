@@ -18,11 +18,11 @@ process CURL_FETCH_BBMAP_REFORMAT_STANDARDISE {
     val   delete_original
 
     output:
-    tuple val(meta), path("*_reformated.${out_fmt}"), optional:true, emit: reformated
-    tuple val(meta), path("*_singleton.${out_fmt}")  , optional:true, emit: singleton
-    tuple val(meta), path('*.reformat.sh.log')       , optional:true, emit: log
-    tuple val(meta), path('*.download.log')          , emit: download_log
-    tuple val(meta), path('*.status')                , emit: status
+    tuple val(meta), path("*_reformated.${out_fmt}"), env(SUCCESS), emit: reformated
+    tuple val(meta), path("*_singleton.${out_fmt}")               , optional:true, emit: singleton
+    tuple val(meta), path('*.reformat.sh.log')                    , optional:true, emit: log
+    tuple val(meta), path('*.download.log')                       , emit: download_log
+    tuple val(meta), path('*.status')                             , emit: status
     tuple val("${task.process}"), val('bbmap'), eval('bbversion.sh 2>&1 | grep -v "Duplicate cpuset"'), emit: versions_bbmap, topic: versions
     tuple val("${task.process}"), val('curl'),  eval('curl --version 2>&1 | head -1 | sed -e "s/curl //;s/ .*//"'), emit: versions_curl, topic: versions
 
@@ -210,6 +210,7 @@ process CURL_FETCH_BBMAP_REFORMAT_STANDARDISE {
     def touch_reformated = (meta.single_end || meta.interleaved) ? "echo '' | gzip > ${prefix}_reformated.${out_fmt}" : "echo '' | gzip > ${prefix}_1_reformated.${out_fmt} ; echo '' | gzip > ${prefix}_2_reformated.${out_fmt}"
     def touch_singleton = (!meta.single_end && !meta.interleaved) ? "echo '' | gzip > ${prefix}_singleton.${out_fmt}" : ""
     """
+    SUCCESS=true
     $touch_reformated
     $touch_singleton
     touch "${prefix}.reformat.sh.log"

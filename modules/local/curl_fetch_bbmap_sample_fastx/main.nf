@@ -18,9 +18,9 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
     val   delete_original
 
     output:
-    tuple val(meta), path('*.sampled.fastq.gz'), optional:true, emit: fastx
-    tuple val(meta), path('*.download.log')    , emit: download_log
-    tuple val(meta), path('*.status')          , emit: status
+    tuple val(meta), path('*.sampled.fastq.gz'), env(SUCCESS), emit: fastx
+    tuple val(meta), path('*.download.log')                  , emit: download_log
+    tuple val(meta), path('*.status')                        , emit: status
     tuple val("${task.process}"), val('bbmap'), eval('bbversion.sh 2>&1 | grep -v "Duplicate cpuset"'), emit: versions_bbmap, topic: versions
     tuple val("${task.process}"), val('curl'),  eval('curl --version 2>&1 | head -1 | sed -e "s/curl //;s/ .*//"'), emit: versions_curl, topic: versions
 
@@ -188,6 +188,7 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def touch_fastx = meta.single_end ? "echo '' | gzip > ${prefix}.sampled.fastq.gz" : "echo '' | gzip > ${prefix}_R1.sampled.fastq.gz ; echo '' | gzip > ${prefix}_R2.sampled.fastq.gz"
     """
+    SUCCESS=true
     $touch_fastx
     touch "${prefix}.download.log"
     echo "true" > ${prefix}.status

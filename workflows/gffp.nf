@@ -62,6 +62,8 @@ workflow GFFP {
             params.ftp_fetch.delete_original
         )
         reads_ch = CURL_FETCH_BBMAP_SAMPLE_FASTX.out.fastx
+            .filter { _meta, _reads, success -> success.trim() == 'true' }
+            .map { meta, reads, _success -> [meta, reads] }
     
         if (!params.skip_standardise) {
             // Standardise headers, De-interleave interleaved paired-end reads
@@ -92,6 +94,8 @@ workflow GFFP {
             params.ftp_fetch.delete_original
         )
         reads_ch = CURL_FETCH_BBMAP_REFORMAT_STANDARDISE.out.reformated
+            .filter { _meta, _reads, success -> success.trim() == 'true' }
+            .map { meta, reads, _success -> [meta, reads] }
 
         if (!params.skip_standardise) {
             // Remove un-paired reads (if they should be paired)

@@ -3,9 +3,9 @@ process CURL_FETCH_BBMAP_SAMPLE_FASTX {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bbmap:39.15--h92535d8_0' :
-        'biocontainers/bbmap:39.15--h92535d8_0' }"
+    // container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    //     'https://depot.galaxyproject.org/singularity/bbmap:39.15--h92535d8_0' :
+    //     'biocontainers/bbmap:39.15--h92535d8_0' }"
 
     input:
     tuple val(meta), val(urls)
